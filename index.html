@@ -1,0 +1,2366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADMov - Sistema de Roteirização ADM</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+
+
+:root{--bg:#0a0e1a;--surface:#111827;--surface2:#1a2234;--border:#1e2d45;--accent:#00e5ff;--accent2:#ff6b35;--accent3:#39ff14;--accent4:#f7c948;--text:#e2e8f0;--text-dim:#64748b;--danger:#ff4444;--mono:'Space Mono',monospace;--sans:'Sora',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:10px;}
+.logo{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.logo-icon{display:flex;align-items:center;justify-content:center;}
+.logo-text{font-size:15px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--accent);}
+.logo-sub{font-size:9px;color:var(--text-dim);letter-spacing:1px;}
+.header-stats{display:flex;gap:16px;}
+.hstat{text-align:center;}
+.hstat-val{font-family:var(--mono);font-size:17px;font-weight:700;color:var(--accent);}
+.hstat-lbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.header-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
+.btn{padding:7px 14px;border-radius:6px;font-family:var(--sans);font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#00c8e0;}
+.btn-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:var(--danger);color:#fff;}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--accent3);font-weight:600;}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--accent3);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}
+.app-body{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:320px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow:hidden;}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--surface);}
+.tab{padding:10px 15px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;cursor:pointer;color:var(--text-dim);border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab:hover:not(.active){color:var(--text);}
+.filter-bar{display:flex;gap:6px;padding:8px 12px;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;align-items:center;flex-wrap:wrap;}
+.filter-chip{padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--text-dim);transition:all .2s;}
+.filter-chip.active{border-color:var(--accent);color:var(--accent);background:rgba(0,229,255,.08);}
+.search-input{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:5px 10px;color:var(--text);font-size:12px;font-family:var(--sans);outline:none;min-width:0;}
+.search-input:focus{border-color:var(--accent);}
+.search-input::placeholder{color:var(--text-dim);}
+.list-area{flex:1;overflow-y:auto;padding:10px;}
+.list-area::-webkit-scrollbar{width:3px;}
+.list-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.order-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px;cursor:pointer;transition:all .2s;position:relative;}
+.order-card:hover{border-color:var(--accent);transform:translateX(2px);}
+.order-card.urgent{border-left:3px solid var(--danger);}
+.order-card.warning{border-left:3px solid var(--accent4);}
+.order-card.assigned{border-left:3px solid var(--accent3);}
+.order-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.order-id{font-family:var(--mono);font-size:10px;color:var(--accent);}
+.badge{font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;text-transform:uppercase;}
+.badge-alto{background:rgba(255,68,68,.2);color:var(--danger);}
+.badge-medio{background:rgba(247,201,72,.2);color:var(--accent4);}
+.badge-normal{background:rgba(57,255,20,.1);color:var(--accent3);}
+.order-client{font-size:12px;font-weight:700;margin-bottom:2px;}
+.order-route{font-size:10px;color:var(--text-dim);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.order-meta{display:flex;gap:10px;}
+.mi{font-size:10px;color:var(--text-dim);}
+.mi b{color:var(--text);}
+.order-footer{font-size:10px;color:var(--accent4);margin-top:4px;}
+.vehicle-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:7px;}
+.vc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.vc-id{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--accent);}
+.vc-status{font-size:9px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;}
+.st-livre{background:rgba(57,255,20,.15);color:var(--accent3);}
+.st-rota{background:rgba(0,229,255,.15);color:var(--accent);}
+.vc-stats{display:flex;gap:12px;margin-bottom:7px;}
+.vst{text-align:center;}
+.vst-val{font-family:var(--mono);font-size:13px;font-weight:700;}
+.vst-lbl{font-size:9px;color:var(--text-dim);}
+.cap-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:5px;}
+.cap-fill{height:100%;border-radius:2px;transition:width .5s;}
+.cf-ok{background:var(--accent3);}
+.cf-mid{background:var(--accent4);}
+.cf-full{background:var(--danger);}
+.vc-driver{font-size:10px;color:var(--text-dim);display:flex;justify-content:space-between;}
+.map-container{flex:1;position:relative;overflow:hidden;background:#0b1018;min-height:0;}
+
+
+
+
+
+
+
+
+.map-svg{width:100%;height:100%;}
+.map-overlay{position:absolute;top:12px;right:12px;display:flex;flex-direction:column;gap:6px;}
+.map-btn{width:34px;height:34px;background:var(--surface);border:1px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all .2s;user-select:none;}
+.map-btn:hover{border-color:var(--accent);color:var(--accent);}
+.info-panel{position:absolute;top:12px;left:12px;background:rgba(10,14,26,.95);border:1px solid var(--border);border-radius:8px;padding:12px 15px;min-width:220px;}
+.ip-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;}
+.ip-row{display:flex;justify-content:space-between;margin-bottom:4px;font-size:11px;}
+.ip-val{font-family:var(--mono);color:var(--accent);font-weight:700;}
+.map-legend{position:absolute;bottom:12px;left:12px;background:rgba(10,14,26,.95);border:1px solid var(--border);border-radius:8px;padding:10px 13px;}
+.leg-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:7px;}
+.leg-item{display:flex;align-items:center;gap:7px;font-size:10px;margin-bottom:3px;}
+.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.bottom-panel{height:190px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.bottom-content{padding:8px 12px;overflow-x:auto;height:calc(100% - 37px);}
+.rtable{width:100%;border-collapse:collapse;font-size:11px;white-space:nowrap;}
+.rtable th{text-align:left;padding:5px 9px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);border-bottom:1px solid var(--border);}
+.rtable td{padding:5px 9px;border-bottom:1px solid rgba(30,45,69,.4);}
+.rtable tr:hover td{background:rgba(0,229,255,.03);}
+.pill{padding:2px 7px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase;}
+.pill-entregue{background:rgba(57,255,20,.15);color:var(--accent3);}
+.pill-em-rota{background:rgba(0,229,255,.15);color:var(--accent);}
+.pill-pendente{background:rgba(100,116,139,.15);color:var(--text-dim);}
+.pill-problema{background:rgba(255,68,68,.15);color:var(--danger);}
+.seq-bubble{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:9px;color:#000;}
+.optim-view{flex:1;overflow-y:auto;padding:16px;}
+.optim-objective{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;}
+.obj-card{background:var(--surface2);border:2px solid var(--border);border-radius:8px;padding:14px;text-align:center;cursor:pointer;transition:all .2s;}
+.obj-card:hover,.obj-card.sel{border-color:var(--accent);background:rgba(0,229,255,.05);}
+.obj-icon{font-size:24px;margin-bottom:5px;}
+.obj-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.obj-desc{font-size:10px;color:var(--text-dim);}
+.params-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.param-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.param-top{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:6px;display:flex;justify-content:space-between;}
+.param-top span{color:var(--accent);font-family:var(--mono);}
+input[type=range]{width:100%;accent-color:var(--accent);cursor:pointer;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;font-size:12px;}
+.tog{width:36px;height:20px;background:var(--border);border-radius:10px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--accent);}
+.tog::after{content:'';position:absolute;width:14px;height:14px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;}
+.tog.on::after{left:19px;}
+.prog-wrap{margin-bottom:14px;display:none;}
+.prog-wrap.show{display:block;}
+.prog-label{font-size:12px;margin-bottom:6px;color:var(--accent);}
+.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width .25s;}
+.optim-btn{width:100%;padding:12px;background:var(--accent);color:#000;border:none;border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .2s;}
+.optim-btn:hover{background:#00c8e0;}
+.optim-btn:disabled{opacity:.5;cursor:not-allowed;}
+.result-box{background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:14px;margin-bottom:14px;display:none;}
+.result-box.show{display:block;}
+.result-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.rstat{text-align:center;}
+.rstat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);}
+.rstat-lbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;}
+.route-detail{margin-top:12px;}
+.rd-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px;}
+.rd-vehicle{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:6px;}
+.rdv-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.rdv-id{font-family:var(--mono);font-size:11px;font-weight:700;}
+.rdv-stats{font-size:10px;color:var(--text-dim);}
+.rdv-stops{font-size:10px;color:var(--text-dim);line-height:1.6;}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px;}
+.kpi-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;}
+.kpi-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:5px;}
+.kpi-val{font-family:var(--mono);font-size:22px;font-weight:700;margin-bottom:3px;}
+.kpi-trend{font-size:11px;}
+.t-up{color:var(--accent3);}
+.t-dn{color:var(--danger);}
+.modal-back{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:flex;align-items:center;justify-content:center;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px;width:520px;max-width:96vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:15px;font-weight:800;margin-bottom:15px;color:var(--accent);}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg.full{grid-column:1/-1;}
+.flbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);}
+.finp,.fsel{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 10px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border .2s;width:100%;}
+.finp:focus,.fsel:focus{border-color:var(--accent);}
+.fsel option{background:var(--surface2);}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+.toast-wrap{position:fixed;bottom:18px;right:18px;display:flex;flex-direction:column;gap:7px;z-index:300;}
+.toast{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:11px 15px;font-size:12px;max-width:340px;transition:all .3s;}
+.toast.s{border-color:var(--accent3);}
+.toast.e{border-color:var(--danger);}
+.toast.i{border-color:var(--accent);}
+
+/* ── Pedido selecionado ── */
+.order-card.sel-active { border-color:var(--accent)!important; background:rgba(0,229,255,.07)!important; box-shadow:0 0 0 2px rgba(0,229,255,.3); }
+/* route-panel now inline */
+.rp-close { float:right; cursor:pointer; color:var(--text-dim); font-size:16px; line-height:1; }
+.rp-close:hover { color:var(--danger); }
+.rp-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:1px; color:var(--accent); margin-bottom:10px; }
+.rp-stop { display:flex; align-items:flex-start; gap:8px; margin-bottom:8px; }
+.rp-seq { width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:9px; font-weight:900; color:#000; flex-shrink:0; margin-top:1px; }
+.rp-info { flex:1; }
+.rp-city { font-size:12px; font-weight:700; }
+.rp-meta { font-size:10px; color:var(--text-dim); }
+.rp-connector { width:1px; height:14px; background:var(--border); margin-left:10px; }
+.rp-stat-row { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.rp-stat { background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:6px 10px; flex:1; text-align:center; min-width:60px; }
+.rp-stat-val { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--accent); }
+.rp-stat-lbl { font-size:9px; color:var(--text-dim); text-transform:uppercase; letter-spacing:.5px; }
+/* ── SVG highlight layers ── */
+
+.hidden{display:none!important;}
+@keyframes dashMove {
+  to { stroke-dashoffset: -36; }
+}
+
+.imp-row-sel td { background:rgba(0,229,255,.05)!important; }
+#import-preview-table input[type=checkbox] { accent-color:var(--accent); cursor:pointer; }
+
+.sec-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:10px;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* Ensure main layout fills viewport */
+html, body { height: 100%; margin: 0; padding: 0; }
+body { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.app-body { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+.main-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+#view-mapa { flex: 1; position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
+
+html,body{height:100%;margin:0;padding:0;}
+body{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
+.app-body{display:flex;flex:1;overflow:hidden;min-height:0;}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;}
+#view-mapa{flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column;min-height:0;background:#0b1018;}
+#svg-map{width:100%;height:100%;display:block;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 108 44" width="108" height="44" xmlns="http://www.w3.org/2000/svg">
+        <!-- Fundo branco arredondado -->
+        <rect x="0" y="0" width="108" height="44" rx="7" ry="7" fill="#ffffff"/>
+        <!-- Folha ADM - corpo principal verde escuro -->
+        <path d="M5,40 C5,40 3,25 11,14 C17,6 26,3 26,3 C26,3 24,19 17,29 C11,37 5,40 5,40 Z" fill="#5cb82e"/>
+        <!-- Folha - reflexo verde claro -->
+        <path d="M26,3 C26,3 22,13 17,20 C13,26 7,31 5,40 C5,40 15,35 21,25 C27,15 26,3 26,3 Z" fill="#8ed44a"/>
+        <!-- Nervura central -->
+        <path d="M26,3 C18,14 11,28 5,40" stroke="#3d8c1e" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+        <!-- Brilho diagonal -->
+        <path d="M9,31 C13,23 19,13 25,6" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" opacity="0.4"/>
+        <!-- Texto ADM bold navy - maior e com mais espaço -->
+        <text x="32" y="35" font-family="'Arial Black','Arial',sans-serif" font-weight="900" font-size="26" fill="#1b2f5e" letter-spacing="0">ADM</text>
+        <!-- Símbolo registrado -->
+        <text x="97" y="13" font-family="Arial,sans-serif" font-size="8" fill="#1b2f5e" font-weight="700">®</text>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">ADMov</div>
+      <div class="logo-sub">Advanced Dispatch &amp; Movement Operations</div>
+    </div>
+  </div>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-val" id="hs-ped">0</div><div class="hstat-lbl">Pedidos</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-rot">0</div><div class="hstat-lbl">Rotas</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-ent">0</div><div class="hstat-lbl">Entregues</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-km" style="color:var(--accent4)">0 km</div><div class="hstat-lbl">Km Total</div></div>
+    <div class="hstat"><div class="hstat-val" id="hs-cst" style="color:var(--accent3)">R$0</div><div class="hstat-lbl">Custo Total</div></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="showModal()">+ Pedido</button>
+    <label class="btn btn-ghost" style="cursor:pointer;border-color:var(--accent4);color:var(--accent4)">
+      &#128194; Importar Planilha
+      <input type="file" id="xlsxInput" accept=".xlsx,.xls" onchange="handleXlsxImport(event)" style="display:none">
+    </label>
+    <button class="btn btn-primary" onclick="showTab('otimizacao')">&#9889; Roteirizar</button>
+  </div>
+</header>
+
+<div class="app-body">
+  <div class="sidebar">
+    <div class="tabs">
+      <div class="tab active" id="stab-ped" onclick="sideTab('ped')">Pedidos</div>
+      <div class="tab" id="stab-vei" onclick="sideTab('vei')">Ve&#237;culos</div>
+      <div class="tab" id="stab-ori" onclick="sideTab('ori')">Origens</div>
+    </div>
+    <div class="filter-bar">
+      <input class="search-input" id="srch" placeholder="&#128269; Buscar..." oninput="renderOrders()">
+      <div class="filter-chip active" id="fc-t" onclick="setFilter('t')">Todos</div>
+      <div class="filter-chip" id="fc-p" onclick="setFilter('p')">Pendentes</div>
+      <div class="filter-chip" id="fc-u" onclick="setFilter('u')">Urgentes</div>
+    </div>
+    <div id="panel-ped" class="list-area"></div>
+    <div id="panel-vei" class="list-area" style="display:none"></div>
+    <div id="panel-ori" class="list-area" style="display:none"></div>
+    <div style="padding:6px;text-align:center;font-size:9px;color:var(--text-dim)">M&#225;x: 20 entregas / ve&#237;culo</div>
+  </div>
+
+  <div class="main-area">
+    <div class="tabs" style="background:var(--surface)">
+      <div class="tab active" id="mtab-mapa"        onclick="showTab('mapa')">&#128506; Mapa</div>
+      <div class="tab"        id="mtab-rotas"        onclick="showTab('rotas')">&#128739; Rotas</div>
+      <div class="tab"        id="mtab-otimizacao"   onclick="showTab('otimizacao')">&#9889; Roteiriza&#231;&#227;o</div>
+      <div class="tab"        id="mtab-kpis"         onclick="showTab('kpis')">&#128202; KPIs</div>
+    </div>
+
+    <!-- ══ MAPA (SVG nativo, sem dependências externas) ══ -->
+    <div id="view-mapa">
+      <svg id="svg-map" viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M40 0L0 0 0 40" fill="none" stroke="#1a2234" stroke-width="0.4"/>
+          </pattern>
+        </defs>
+        <!-- Background -->
+        <rect width="900" height="480" fill="#0b1018"/>
+        <rect width="900" height="480" fill="url(#grid)"/>
+        <!-- Brasil outline -->
+        <path d="M415,25 L488,20 L558,28 L618,46 L662,73 L682,112 L676,152 L692,193 L708,238
+                 L698,283 L666,316 L628,346 L588,376 L548,403 L508,423 L463,438 L418,443
+                 L373,438 L333,420 L293,396 L263,363 L246,326 L236,286 L226,246 L220,203
+                 L228,161 L240,120 L260,82 L288,53 L348,30 Z"
+              fill="none" stroke="#1e3a5f" stroke-width="1.8" opacity="0.55"/>
+        <!-- Estados -->
+        <path d="M292,363 L378,353 L413,386 L398,430 L338,438 L283,406 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M373,323 L458,316 L476,356 L453,383 L398,383 L370,358 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M376,276 L488,266 L513,306 L493,326 L456,320 L378,326 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M393,213 L543,200 L570,246 L556,270 L508,276 L453,273 L403,258 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M446,153 L596,140 L623,183 L608,218 L553,238 L498,246 L453,238 L430,203 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M448,98 L578,88 L600,133 L576,156 L518,160 L460,153 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M310,85 L448,75 L450,100 L460,153 L378,160 L308,145 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <path d="M593,73 L683,66 L693,103 L656,113 L598,110 Z" fill="#0c1824" stroke="#1e3a5f" stroke-width="1" opacity="0.6"/>
+        <!-- Estado labels -->
+        <text x="346" y="398" fill="#2a4a6b" font-size="10" font-weight="800" opacity="0.9">RS</text>
+        <text x="418" y="356" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">SC</text>
+        <text x="433" y="300" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">PR</text>
+        <text x="486" y="240" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">SP</text>
+        <text x="526" y="196" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">MG</text>
+        <text x="516" y="130" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">GO</text>
+        <text x="368" y="122" fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">MT</text>
+        <text x="635" y="93"  fill="#2a4a6b" font-size="9"  font-weight="800" opacity="0.9">PE</text>
+        <!-- Layers drawn by JS -->
+        <g id="svg-route-layer"></g>
+        <g id="svg-origin-layer"></g>
+        <g id="svg-marker-layer"></g>
+      </svg>
+
+      <!-- Empty state -->
+      <div id="map-empty-state" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,26,.75);pointer-events:none;">
+        <div style="font-size:48px;margin-bottom:14px;opacity:.5">&#128506;</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">Selecione um pedido</div>
+        <div style="font-size:12px;color:var(--text-dim);text-align:center;max-width:260px;line-height:1.6">Clique em qualquer card na coluna Pedidos para visualizar a rota no mapa</div>
+      </div>
+
+      <!-- Route panel -->
+      <div id="route-panel" style="position:absolute;top:12px;left:12px;z-index:20;width:275px;background:rgba(10,14,26,.97);border:1px solid var(--accent);border-radius:10px;padding:14px;display:none;max-height:calc(100% - 24px);overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.7);">
+        <span style="float:right;cursor:pointer;color:var(--text-dim);font-size:16px" onclick="clearSelection()">&#10005;</span>
+        <div id="rp-content"></div>
+      </div>
+
+      <!-- Controls -->
+      <div style="position:absolute;top:12px;right:12px;z-index:10;display:flex;flex-direction:column;gap:6px;">
+        <div class="map-btn" onclick="clearSelection()" title="Limpar rota">&#8635;</div>
+      </div>
+
+      <!-- Legend -->
+      <div style="position:absolute;bottom:12px;left:12px;z-index:10;background:rgba(10,14,26,.93);border:1px solid var(--border);border-radius:8px;padding:10px 13px;">
+        <div class="leg-title">Legenda</div>
+        <div class="leg-item"><div style="width:9px;height:9px;background:var(--accent);transform:rotate(45deg)"></div>CD / F&#225;brica (origem)</div>
+        <div id="leg-vehicles"></div>
+        <div class="leg-item"><div class="leg-dot" style="background:#445"></div>Pendente</div>
+      </div>
+    </div>
+
+    <!-- ROTAS -->
+    <div id="view-rotas" style="display:none;overflow:auto;padding:14px;">
+      <table class="rtable" id="routeTable">
+        <thead><tr><th>#</th><th>Pedido</th><th>Cliente</th><th>Origem</th><th>Destino</th><th>Ve&#237;culo</th><th>Dist.(km)</th><th>Custo(R$)</th><th>Janela</th><th>ETA</th><th>Status</th></tr></thead>
+        <tbody id="routeBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ROTEIRIZACAO -->
+    <div id="view-otimizacao" style="display:none;overflow:auto;">
+      <div class="optim-view">
+        <div class="sec-title">Objetivo de Otimiza&#231;&#227;o</div>
+        <div class="optim-objective">
+          <div class="obj-card sel" id="obj-dist"     onclick="selObj('dist')"><div class="obj-icon">&#128207;</div><div class="obj-name">Menor Dist&#226;ncia</div><div class="obj-desc">Minimiza km totais</div></div>
+          <div class="obj-card"     id="obj-custo"    onclick="selObj('custo')"><div class="obj-icon">&#128176;</div><div class="obj-name">Menor Custo</div><div class="obj-desc">Otimiza R$/km</div></div>
+          <div class="obj-card"     id="obj-tempo"    onclick="selObj('tempo')"><div class="obj-icon">&#9201;</div><div class="obj-name">Menor Tempo</div><div class="obj-desc">Prioriza velocidade</div></div>
+        </div>
+        <div class="sec-title">Par&#226;metros da Frota</div>
+        <div class="params-grid">
+          <div class="param-box"><div class="param-top">M&#225;x. entregas/ve&#237;culo <span id="pv-max">20</span></div><input type="range" min="1" max="20" value="20" id="sl-max" oninput="document.getElementById('pv-max').textContent=this.value"></div>
+          <div class="param-box"><div class="param-top">Ve&#237;culos dispon&#237;veis <span id="pv-vei">7</span></div><input type="range" min="1" max="20" value="7" id="sl-vei" oninput="document.getElementById('pv-vei').textContent=this.value;updateVehicleCount(+this.value)"></div>
+          <div class="param-box"><div class="param-top">Velocidade m&#233;dia (km/h) <span id="pv-vel">80</span></div><input type="range" min="40" max="130" step="5" value="80" id="sl-vel" oninput="document.getElementById('pv-vel').textContent=this.value"></div>
+          <div class="param-box"><div class="param-top">Custo por km (R$) <span id="pv-ckm">4,50</span></div><input type="range" min="1" max="15" step="0.5" value="4.5" id="sl-ckm" oninput="document.getElementById('pv-ckm').textContent=parseFloat(this.value).toFixed(2).replace('.',',')"></div>
+          <div class="param-box"><div class="param-top">Capacidade m&#225;x. kg <span id="pv-cap">30.000</span></div><input type="range" min="1000" max="60000" step="1000" value="30000" id="sl-cap" oninput="document.getElementById('pv-cap').textContent=parseInt(this.value).toLocaleString('pt-BR')"></div>
+          <div class="param-box"><div class="param-top">Tempo/parada (min) <span id="pv-tp">30</span></div><input type="range" min="10" max="120" step="5" value="30" id="sl-tp" oninput="document.getElementById('pv-tp').textContent=this.value"></div>
+          <div class="param-box" style="grid-column:1/-1">
+            <div class="param-top" style="margin-bottom:10px">Tipos de Ve&#237;culo Dispon&#237;veis</div>
+            <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px" id="vtype-selector"></div>
+            <div style="font-size:10px;color:var(--text-dim);margin-top:8px">Sistema seleciona automaticamente o menor ve&#237;culo que comporta o peso do lote</div>
+          </div>
+        </div>
+        <div class="sec-title">Restri&#231;&#245;es</div>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px">
+          <div class="toggle-row">Respeitar janelas de tempo <div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row">Consolidar pedidos da mesma origem <div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row">Otimiza&#231;&#227;o 2-opt <div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row">Priorizar urgentes <div class="tog on" onclick="this.classList.toggle('on')"></div></div>
+          <div class="toggle-row">Equilibrar paradas entre ve&#237;culos <div class="tog" onclick="this.classList.toggle('on')"></div></div>
+        </div>
+        <div class="prog-wrap" id="progWrap"><div class="prog-label" id="progLbl">&#9889; Calculando...</div><div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div></div>
+        <div class="result-box" id="resultBox"><div class="sec-title" style="margin-bottom:10px">&#10003; Resultado</div><div class="result-grid" id="resultGrid"></div><div class="route-detail" id="routeDetail"></div></div>
+        <button class="optim-btn" id="optimBtn" onclick="runRouting()">&#9889; EXECUTAR ROTEIRIZA&#199;&#195;O</button>
+      </div>
+    </div>
+
+    <!-- KPIS -->
+    <div id="view-kpis" style="display:none;overflow:auto;">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div style="padding:0 14px 14px"><div class="sec-title" style="margin-bottom:10px">Distribui&#231;&#227;o por Origem</div><div id="origemStats" style="display:flex;gap:8px;flex-wrap:wrap"></div></div>
+    </div>
+
+    <!-- BOTTOM -->
+    <div class="bottom-panel" id="bottomPanel">
+      <div class="tabs" style="background:var(--surface)">
+        <div class="tab active" id="btab-seq" onclick="botTab('seq')">Sequ&#234;ncia Otimizada</div>
+        <div class="tab" id="btab-mot" onclick="botTab('mot')">Motoristas</div>
+      </div>
+      <div class="bottom-content">
+        <div id="bot-seq">
+          <table class="rtable"><thead><tr><th>Seq</th><th>Pedido</th><th>Cliente</th><th>Origem&#8594;Destino</th><th>Ve&#237;culo</th><th>km acum.</th><th>ETA</th><th>Status</th><th>A&#231;&#227;o</th></tr></thead><tbody id="seqBody"></tbody></table>
+        </div>
+        <div id="bot-mot" style="display:none">
+          <table class="rtable"><thead><tr><th>Motorista</th><th>Ve&#237;culo</th><th>Tipo</th><th>Capacidade</th><th>Base</th><th>Paradas</th><th>Km</th><th>Custo(R$)</th><th>Ocupa&#231;&#227;o</th><th>Status</th></tr></thead><tbody id="motBody"></tbody></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-back hidden" id="addModal">
+  <div class="modal" style="width:660px;max-height:94vh;overflow-y:auto">
+    <div class="modal-title">➕ Novo Lote de Entregas</div>
+
+    <!-- LINHA 1: Base de Origem (full width) -->
+    <div class="form-grid" style="margin-bottom:12px">
+      <div class="fg full">
+        <div class="flbl">Base de Origem</div>
+        <select class="fsel" id="f-ori">
+          <option value="Canoas">Canoas — RS</option>
+          <option value="Fáb. Descalvado">Fábrica Descalvado — SP</option>
+          <option value="CD Descalvado">CD Descalvado — SP</option>
+          <option value="Inhumas">Inhumas — GO</option>
+          <option value="Primavera do Leste">Primavera do Leste — MT</option>
+          <option value="S. Lourenço da Mata">São Lourenço da Mata — PE</option>
+          <option value="Comans">Comans — SP</option>
+          <option value="Apucarana">Apucarana — PR</option>
+          <option value="Indaiatuba">Indaiatuba — SP</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- SEÇÃO CLIENTES -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="flbl">Clientes / Destinatários
+          <span id="cli-count-lbl" style="color:var(--accent4);font-family:var(--mono);margin-left:4px">(0/20)</span>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim)">Digite e pressione Enter ou clique em + — até 20 clientes</div>
+      </div>
+
+      <!-- Chips de clientes -->
+      <div id="cli-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text-dim);align-self:center" id="cli-placeholder">Nenhum cliente adicionado ainda...</span>
+      </div>
+
+      <!-- Input de cliente + prioridade -->
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div style="flex:1;position:relative">
+          <input class="finp" id="f-cli"
+            placeholder="🏢 Nome do cliente ou empresa..."
+            onkeydown="cliKeydown(event)"
+            autocomplete="off" style="width:100%">
+          <div id="cli-status" style="font-size:10px;margin-top:4px;min-height:14px;color:var(--text-dim)"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <div class="flbl" style="font-size:9px">Prioridade</div>
+          <select class="fsel" id="f-pri" style="width:110px">
+            <option value="normal">Normal</option>
+            <option value="medio">Médio</option>
+            <option value="alto">URGENTE</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost" onclick="addClient()"
+          style="align-self:flex-start;margin-top:0;padding:8px 14px;flex-shrink:0;border-color:var(--accent4);color:var(--accent4)">
+          + Adicionar
+        </button>
+      </div>
+    </div>
+
+    <!-- LINHA: Peso / Volume / Janelas -->
+    <div class="form-grid" style="margin-bottom:14px">
+      <div class="fg"><div class="flbl">Peso por entrega (kg)</div><input class="finp" id="f-peso" type="number" value="500"></div>
+      <div class="fg"><div class="flbl">Volume por entrega (m³)</div><input class="finp" id="f-vol" type="number" value="5" step="0.5"></div>
+      <div class="fg"><div class="flbl">Janela início</div><input class="finp" id="f-ji" type="time" value="08:00"></div>
+      <div class="fg"><div class="flbl">Janela fim</div><input class="finp" id="f-jf" type="time" value="18:00"></div>
+    </div>
+
+    <!-- SEÇÃO CIDADES DE DESTINO -->
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div class="flbl">Cidades de Entrega
+          <span id="city-count-lbl" style="color:var(--accent);font-family:var(--mono);margin-left:4px">(0/20)</span>
+        </div>
+        <div style="font-size:10px;color:var(--text-dim)">Busque e clique para adicionar — até 20 cidades</div>
+      </div>
+
+      <!-- Chips de cidades -->
+      <div id="city-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:36px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;margin-bottom:8px">
+        <span style="font-size:11px;color:var(--text-dim);align-self:center" id="chips-placeholder">Nenhuma cidade adicionada ainda...</span>
+      </div>
+
+      <!-- Busca de cidade -->
+      <div style="position:relative">
+        <input class="finp" id="f-dest"
+          placeholder="🔍 Digite o nome de uma cidade (ex: Campinas, Curitiba...)"
+          oninput="geocodeCity(this.value)"
+          onkeydown="destKeydown(event)"
+          autocomplete="off" style="width:100%">
+        <div id="geo-status" style="font-size:10px;margin-top:4px;min-height:14px;color:var(--text-dim)"></div>
+        <div id="geo-suggestions"
+          style="background:var(--surface);border:1px solid var(--accent);border-radius:6px;margin-top:2px;
+                 display:none;max-height:180px;overflow-y:auto;position:absolute;z-index:999;width:100%;
+                 box-shadow:0 8px 28px rgba(0,0,0,.6)"></div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:14px;font-size:10px;color:var(--text-dim)">
+      💡 Serão criados <b id="lbl-combo" style="color:var(--accent)">0</b> pedidos —
+      combinação de <b id="lbl-ncli" style="color:var(--accent4)">0 cliente(s)</b> ×
+      <b id="lbl-ncit" style="color:var(--accent)">0 cidade(s)</b>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-ghost" onclick="clearAll()" style="color:var(--danger);border-color:var(--danger)">Limpar tudo</button>
+      <button class="btn btn-primary" id="btn-add-order" onclick="addOrder()">Adicionar Pedidos</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div class="modal-back" id="importModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;">
+  <div class="modal" style="width:700px;max-height:92vh;overflow-y:auto">
+    <div class="modal-title">&#128194; Importar Planilha Routeasy</div>
+    <div id="import-summary" style="display:none;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px" id="import-stats"></div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:10px">
+        <div class="flbl" style="margin-bottom:8px">Filtros</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <div><div class="flbl" style="font-size:9px;margin-bottom:3px">Data</div><select class="fsel" id="imp-filter-date" style="width:140px;font-size:11px"></select></div>
+          <div><div class="flbl" style="font-size:9px;margin-bottom:3px">Filial</div><select class="fsel" id="imp-filter-filial" style="width:170px;font-size:11px"></select></div>
+          <div><div class="flbl" style="font-size:9px;margin-bottom:3px">Estado</div><select class="fsel" id="imp-filter-estado" style="width:100px;font-size:11px"></select></div>
+          <button class="btn btn-ghost" onclick="applyImportFilters()" style="font-size:11px;align-self:flex-end">Filtrar</button>
+          <button class="btn btn-ghost" onclick="resetImportFilters()" style="font-size:11px;align-self:flex-end;color:var(--text-dim)">Limpar</button>
+        </div>
+      </div>
+      <div style="max-height:280px;overflow:auto;border:1px solid var(--border);border-radius:8px">
+        <table class="rtable" id="import-preview-table">
+          <thead><tr><th><input type="checkbox" id="chk-all" onchange="toggleAllImport(this.checked)"></th><th>NF</th><th>Cliente</th><th>Munic&#237;pio</th><th>UF</th><th>Peso</th><th>Origem</th><th>Data</th></tr></thead>
+          <tbody id="import-preview-body"></tbody>
+        </table>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);margin-top:8px" id="import-selection-info">0 selecionados</div>
+    </div>
+    <div id="import-dropzone" style="border:2px dashed var(--border);border-radius:10px;padding:40px;text-align:center;margin-bottom:14px">
+      <div style="font-size:36px;margin-bottom:10px">&#128202;</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Arraste o arquivo ou clique em "Importar Planilha"</div>
+      <div style="font-size:11px;color:var(--text-dim)">Formato: .xlsx (padr&#227;o Routeasy)</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-ghost" onclick="closeImportModal()">Cancelar</button>
+      <button class="btn btn-primary" id="btn-confirm-import" onclick="confirmImport()" style="display:none">&#10003; Importar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+
+
+// ════════════════════════════════════════════════════════════════════
+// CONSTANTES E DADOS MESTRES
+// ════════════════════════════════════════════════════════════════════
+
+const TRUCK_COLORS = [
+  '#ff6b35','#39ff14','#f7c948','#a855f7',
+  '#ff3d9a','#00ffcc','#ff9900','#4af7ff'
+];
+
+const MAX_STOPS = 20; // máximo de entregas por veículo
+
+// ─── TIPOS DE VEÍCULO ──────────────────────────────────────────────
+const VEHICLE_TYPES = [
+  { tipo:'Bitrem',  icon:'🚛', minKg:25000, maxKg:28000, label:'Bitrem  25–28 t', color:'#ff3d9a' },
+  { tipo:'Carreta', icon:'🚛', minKg:20000, maxKg:24000, label:'Carreta 20–24 t', color:'#ff6b35' },
+  { tipo:'Truck',   icon:'🚚', minKg:12000, maxKg:14000, label:'Truck   12–14 t', color:'#f7c948' },
+  { tipo:'Toco',    icon:'🚚', minKg: 4000, maxKg: 6000, label:'Toco     4–6 t',  color:'#39ff14' },
+  { tipo:'Leve',    icon:'🚐', minKg: 3000, maxKg: 4000, label:'Leve     3–4 t',  color:'#00e5ff' },
+  { tipo:'VUC',     icon:'🚐', minKg: 2000, maxKg: 3000, label:'VUC      2–3 t',  color:'#a855f7' },
+  { tipo:'Fiorino', icon:'🚗', minKg:    0, maxKg: 2000, label:'Fiorino  0–2 t',  color:'#00ffcc' },
+];
+
+function getVehicleType(totalKgCarga) {
+  // Escolhe o menor veículo que comporta a carga total
+  for (var vt of VEHICLE_TYPES) {
+    if (totalKgCarga <= vt.maxKg) return vt;
+  }
+  return VEHICLE_TYPES[0]; // Bitrem como fallback
+}
+
+function vehicleTypeColor(tipo) {
+  var vt = VEHICLE_TYPES.find(function(x){ return x.tipo === tipo; });
+  return vt ? vt.color : '#888';
+}
+
+// Projeção geográfica para SVG 900×480
+// Lon [-62, -33] → x [55, 865]  |  Lat [-33, -2] → y [28, 458]
+function lx(lon){ return ((lon - (-62)) / 29) * 810 + 55; }
+function ly(lat){ return ((lat - (-2)) / (-31)) * 430 + 28; }
+
+// ─── ORIGENS (bases de despacho) ────────────────────────────────────
+const ORIGINS = [
+  { id:'CAN', name:'Canoas',            state:'RS', type:'CD',      lat:-29.919, lon:-51.183 },
+  { id:'FAB', name:'Fáb. Descalvado',   state:'SP', type:'Fábrica', lat:-21.900, lon:-47.616 },
+  { id:'CDD', name:'CD Descalvado',     state:'SP', type:'CD',      lat:-21.945, lon:-47.570 },
+  { id:'INH', name:'Inhumas',           state:'GO', type:'CD',      lat:-16.358, lon:-49.497 },
+  { id:'PRI', name:'Primavera do Leste',state:'MT', type:'CD',      lat:-15.559, lon:-54.285 },
+  { id:'SLM', name:'S. Lourenço da Mata',state:'PE',type:'Fábrica', lat: -8.002, lon:-35.004 },
+  { id:'COM', name:'Comans',            state:'SP', type:'CD',      lat:-22.645, lon:-47.196 },
+  { id:'APU', name:'Apucarana',         state:'PR', type:'CD',      lat:-23.551, lon:-51.461 },
+  { id:'IND', name:'Indaiatuba',        state:'SP', type:'Fábrica', lat:-23.090, lon:-47.219 },
+].map(o => ({ ...o, x: lx(o.lon), y: ly(o.lat) }));
+
+function findOrigin(name) {
+  return ORIGINS.find(r => r.name === name) ||
+         ORIGINS.find(r => name && name.startsWith(r.name.split(' ')[0])) ||
+         ORIGINS[0];
+}
+
+// ─── FROTA ───────────────────────────────────────────────────────────
+const DRIVERS = ['Carlos Silva','Ana Pereira','José Santos','Maria Costa',
+                 'Paulo Lima','Lucia Ramos','André Nunes','Cláudia Melo',
+                 'Roberto Dias','Fernanda Cruz','Marcos Vaz','Sandra Pinto'];
+
+// Frota inicial: um de cada tipo
+let vehicles = VEHICLE_TYPES.map(function(vt, i) {
+  return {
+    id: vt.tipo.toUpperCase().substring(0,3) + '-' + String(i+1).padStart(2,'0'),
+    driver: DRIVERS[i] || ('Motorista ' + (i+1)),
+    color: vt.color,
+    tipo: vt.tipo,
+    capKg: vt.maxKg,
+    minKg: vt.minKg,
+    status:'livre', usedKg:0,
+    stops:0, done:0, totalKm:0, totalCost:0,
+    origin:null, route:[]
+  };
+});
+
+// ─── PEDIDOS (dataset inicial com cidades reais) ──────────────────────
+let orders = [
+  // Canoas (RS) → Sul/Sudeste
+  {id:'PED-001',client:'GPA Porto Alegre',    dest:'Porto Alegre, RS',    origem:'Canoas',            lat:-30.033,lon:-51.230,peso:1200,vol:18,priority:'alto',  window:'07:00-12:00',status:'pendente'},
+  {id:'PED-002',client:'Makro Florianópolis', dest:'Florianópolis, SC',   origem:'Canoas',            lat:-27.595,lon:-48.549,peso:800, vol:12,priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-003',client:'Carrefour Caxias',    dest:'Caxias do Sul, RS',   origem:'Canoas',            lat:-29.168,lon:-51.179,peso:950, vol:14,priority:'medio', window:'09:00-17:00',status:'pendente'},
+  {id:'PED-004',client:'Atacadão Pelotas',    dest:'Pelotas, RS',         origem:'Canoas',            lat:-31.769,lon:-52.337,peso:600, vol:9, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  // Fáb. Descalvado (SP)
+  {id:'PED-005',client:'Carrefour Ribeirão',  dest:'Ribeirão Preto, SP',  origem:'Fáb. Descalvado',   lat:-21.177,lon:-47.813,peso:700, vol:10,priority:'medio', window:'09:00-15:00',status:'pendente'},
+  {id:'PED-006',client:'GPA Bauru',           dest:'Bauru, SP',           origem:'Fáb. Descalvado',   lat:-22.315,lon:-49.068,peso:550, vol:8, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-007',client:'Makro Araçatuba',     dest:'Araçatuba, SP',       origem:'Fáb. Descalvado',   lat:-21.209,lon:-50.431,peso:480, vol:7, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  // CD Descalvado (SP)
+  {id:'PED-008',client:'Atacadão Campinas',   dest:'Campinas, SP',        origem:'CD Descalvado',     lat:-22.905,lon:-47.063,peso:800, vol:12,priority:'alto',  window:'07:00-11:00',status:'pendente'},
+  {id:'PED-009',client:'GPA Piracicaba',      dest:'Piracicaba, SP',      origem:'CD Descalvado',     lat:-22.728,lon:-47.649,peso:650, vol:10,priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-010',client:'Atacadão Limeira',    dest:'Limeira, SP',         origem:'CD Descalvado',     lat:-22.564,lon:-47.401,peso:500, vol:8, priority:'medio', window:'10:00-16:00',status:'pendente'},
+  // Inhumas (GO)
+  {id:'PED-011',client:'Makro Goiânia',       dest:'Goiânia, GO',         origem:'Inhumas',           lat:-16.686,lon:-49.253,peso:950, vol:14,priority:'medio', window:'08:00-17:00',status:'pendente'},
+  {id:'PED-012',client:'GPA Brasília',        dest:'Brasília, DF',        origem:'Inhumas',           lat:-15.779,lon:-47.930,peso:1100,vol:16,priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-013',client:'Atacadão Anápolis',   dest:'Anápolis, GO',        origem:'Inhumas',           lat:-16.328,lon:-48.953,peso:700, vol:10,priority:'normal',window:'09:00-17:00',status:'pendente'},
+  // Primavera do Leste (MT)
+  {id:'PED-014',client:'GPA Cuiabá',          dest:'Cuiabá, MT',          origem:'Primavera do Leste',lat:-15.601,lon:-56.097,peso:900, vol:14,priority:'alto',  window:'07:00-12:00',status:'pendente'},
+  {id:'PED-015',client:'Makro Rondonópolis',  dest:'Rondonópolis, MT',    origem:'Primavera do Leste',lat:-16.467,lon:-54.636,peso:600, vol:9, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  // S. Lourenço da Mata (PE)
+  {id:'PED-016',client:'Atacadão Recife',     dest:'Recife, PE',          origem:'S. Lourenço da Mata',lat:-8.054,lon:-34.877,peso:1500,vol:22,priority:'alto',  window:'06:00-10:00',status:'pendente'},
+  {id:'PED-017',client:'GPA Caruaru',         dest:'Caruaru, PE',         origem:'S. Lourenço da Mata',lat:-8.284,lon:-35.976,peso:700, vol:11,priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-018',client:'Makro Fortaleza',     dest:'Fortaleza, CE',       origem:'S. Lourenço da Mata',lat:-3.717, lon:-38.543,peso:900, vol:14,priority:'medio', window:'08:00-16:00',status:'pendente'},
+  {id:'PED-019',client:'Atacadão Natal',      dest:'Natal, RN',           origem:'S. Lourenço da Mata',lat:-5.793, lon:-35.203,peso:650, vol:10,priority:'normal',window:'09:00-17:00',status:'pendente'},
+  // Comans (SP)
+  {id:'PED-020',client:'GPA Sorocaba',        dest:'Sorocaba, SP',        origem:'Comans',            lat:-23.501,lon:-47.458,peso:550, vol:8, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-021',client:'Carrefour Jundiaí',   dest:'Jundiaí, SP',         origem:'Comans',            lat:-23.185,lon:-46.884,peso:480, vol:7, priority:'medio', window:'10:00-16:00',status:'pendente'},
+  // Apucarana (PR)
+  {id:'PED-022',client:'Makro Maringá',       dest:'Maringá, PR',         origem:'Apucarana',         lat:-23.420,lon:-51.937,peso:450, vol:7, priority:'normal',window:'09:00-17:00',status:'pendente'},
+  {id:'PED-023',client:'GPA Londrina',        dest:'Londrina, PR',        origem:'Apucarana',         lat:-23.310,lon:-51.165,peso:400, vol:6, priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-024',client:'Atacadão Cascavel',   dest:'Cascavel, PR',        origem:'Apucarana',         lat:-24.956,lon:-53.455,peso:600, vol:9, priority:'medio', window:'08:00-17:00',status:'pendente'},
+  // Indaiatuba (SP)
+  {id:'PED-025',client:'GPA São Paulo',       dest:'São Paulo, SP',       origem:'Indaiatuba',        lat:-23.550,lon:-46.633,peso:1200,vol:18,priority:'alto',  window:'07:00-11:00',status:'pendente'},
+  {id:'PED-026',client:'Makro Santo André',   dest:'Santo André, SP',     origem:'Indaiatuba',        lat:-23.664,lon:-46.530,peso:700, vol:10,priority:'normal',window:'08:00-18:00',status:'pendente'},
+  {id:'PED-027',client:'Carrefour Campinas 2',dest:'Campinas Sul, SP',    origem:'Indaiatuba',        lat:-23.000,lon:-47.100,peso:500, vol:7, priority:'medio', window:'10:00-16:00',status:'pendente'},
+].map((o,i) => ({...o, x:lx(o.lon), y:ly(o.lat), seq:null, vehicle:null, eta:null, kmFromOrigin:null}));
+
+let activeFilter = 't';
+let currentObjective = 'dist';
+let costPerKm = 4.5;
+let avgSpeed = 80;
+let stopTime = 30; // min
+let routingResult = null;
+
+// ════════════════════════════════════════════════════════════════════
+// ALGORITMO DE ROTEIRIZAÇÃO
+// ════════════════════════════════════════════════════════════════════
+
+// Haversine: distância real em km entre dois pontos
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+// Nearest Neighbor: constrói rota a partir da origem, pegando sempre o vizinho mais próximo não visitado
+function nearestNeighbor(origin, stops) {
+  if (!stops.length) return [];
+  const unvisited = [...stops];
+  const route = [];
+  let cur = { lat: origin.lat, lon: origin.lon };
+  while (unvisited.length) {
+    let best = null, bestDist = Infinity, bestIdx = -1;
+    unvisited.forEach((s, i) => {
+      const d = haversine(cur.lat, cur.lon, s.lat, s.lon);
+      if (d < bestDist) { bestDist = d; best = s; bestIdx = i; }
+    });
+    route.push(best);
+    cur = best;
+    unvisited.splice(bestIdx, 1);
+  }
+  return route;
+}
+
+// 2-opt: melhora a rota trocando pares de arestas até não haver melhoria
+function twoOpt(route, originLat, originLon) {
+  if (route.length < 3) return route;
+  let improved = true;
+  let best = [...route];
+  function routeDist(r) {
+    let d = haversine(originLat, originLon, r[0].lat, r[0].lon);
+    for (let i=0;i<r.length-1;i++) d += haversine(r[i].lat, r[i].lon, r[i+1].lat, r[i+1].lon);
+    return d;
+  }
+  let iterations = 0;
+  while (improved && iterations < 50) {
+    improved = false;
+    iterations++;
+    for (let i=0; i<best.length-1; i++) {
+      for (let j=i+1; j<best.length; j++) {
+        const newRoute = [...best.slice(0,i), ...best.slice(i,j+1).reverse(), ...best.slice(j+1)];
+        if (routeDist(newRoute) < routeDist(best)) {
+          best = newRoute;
+          improved = true;
+        }
+      }
+    }
+  }
+  return best;
+}
+
+// Calcula distância total de uma rota
+function routeTotalKm(origin, stops) {
+  if (!stops.length) return 0;
+  let d = haversine(origin.lat, origin.lon, stops[0].lat, stops[0].lon);
+  for (let i=0;i<stops.length-1;i++) d += haversine(stops[i].lat, stops[i].lon, stops[i+1].lat, stops[i+1].lon);
+  return d;
+}
+
+// Calcula ETA acumulado para cada parada
+function calcETAs(origin, stops, speedKmh, stopMinutes, startHour=6) {
+  let elapsed = 0; // minutos
+  let cur = origin;
+  return stops.map(s => {
+    const km = haversine(cur.lat, cur.lon, s.lat, s.lon);
+    elapsed += (km / speedKmh) * 60 + stopMinutes;
+    const totalMin = startHour*60 + elapsed;
+    const h = Math.floor(totalMin/60) % 24;
+    const m = Math.round(totalMin%60);
+    cur = s;
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  });
+}
+
+// MOTOR PRINCIPAL de roteirização
+function routingEngine(pendingOrders, vehicleCount, maxStops, ckm, speed, stopMin, objective) {
+  // 1. Separar pedidos por origem
+  const byOrigin = {};
+  pendingOrders.forEach(o => {
+    const ori = findOrigin(o.origem);
+    if (!byOrigin[ori.id]) byOrigin[ori.id] = [];
+    byOrigin[ori.id].push(o);
+  });
+
+  // 2. Ordenar por prioridade (urgente primeiro)
+  const priorityOrder = {alto:0, medio:1, normal:2};
+  Object.values(byOrigin).forEach(arr => arr.sort((a,b) => priorityOrder[a.priority]-priorityOrder[b.priority]));
+
+  // 3. Distribuir em veículos — seleciona tipo pelo peso total do lote
+  const assignments = [];
+  const usedVehicles = vehicles.slice(0, vehicleCount);
+  // Track which vehicles are already assigned in this run
+  const assignedVIds = new Set();
+
+  function pickVehicle(totalKg) {
+    // Find smallest type that fits the cargo
+    for (var vt of VEHICLE_TYPES) {
+      if (totalKg <= vt.maxKg) {
+        // Find a free vehicle of this type (or create virtual)
+        var found = usedVehicles.find(function(v) {
+          return v.tipo === vt.tipo && !assignedVIds.has(v.id);
+        });
+        if (found) { assignedVIds.add(found.id); return found; }
+        // No free vehicle of right type — find any free vehicle and retype it
+        var anyFree = usedVehicles.find(function(v){ return !assignedVIds.has(v.id); });
+        if (anyFree) {
+          anyFree.tipo  = vt.tipo;
+          anyFree.color = vt.color;
+          anyFree.capKg = vt.maxKg;
+          anyFree.minKg = vt.minKg;
+          assignedVIds.add(anyFree.id);
+          return anyFree;
+        }
+        break;
+      }
+    }
+    // Fallback: any free vehicle
+    var fb = usedVehicles.find(function(v){ return !assignedVIds.has(v.id); });
+    if (fb) { assignedVIds.add(fb.id); return fb; }
+    return usedVehicles[0];
+  }
+
+  Object.entries(byOrigin).forEach(([oriId, stops]) => {
+    const origin = ORIGINS.find(o => o.id === oriId);
+    let batch = [];
+    let batchKg = 0;
+    stops.forEach(s => {
+      batch.push(s);
+      batchKg += s.peso;
+      // Split batch when maxStops OR when next item would exceed Bitrem max
+      if (batch.length === maxStops || batchKg >= 28000) {
+        const veh = pickVehicle(batchKg);
+        if (veh) assignments.push({ vehicle: veh, origin, stops: [...batch], totalKg: batchKg });
+        batch = []; batchKg = 0;
+      }
+    });
+    if (batch.length) {
+      const veh = pickVehicle(batchKg);
+      if (veh) assignments.push({ vehicle: veh, origin, stops: [...batch], totalKg: batchKg });
+    }
+  });
+
+  // 4. Para cada veículo: Nearest Neighbor → 2-opt → calcular métricas
+  const routes = [];
+  assignments.forEach(asgn => {
+    const { vehicle, origin, stops } = asgn;
+    // Nearest Neighbor
+    let optimized = nearestNeighbor(origin, stops);
+    // 2-opt (melhoria)
+    optimized = twoOpt(optimized, origin.lat, origin.lon);
+    // Métricas
+    const totalKm = Math.round(routeTotalKm(origin, optimized));
+    const totalCost = totalKm * ckm;
+    const etas = calcETAs(origin, optimized, speed, stopMin);
+    // Calcular km acumulado por parada
+    let cumKm = 0;
+    let cur = origin;
+    const cumKms = optimized.map(s => {
+      cumKm += haversine(cur.lat, cur.lon, s.lat, s.lon);
+      cur = s;
+      return Math.round(cumKm);
+    });
+    routes.push({ vehicle, origin, stops: optimized, totalKm, totalCost, etas, cumKms });
+  });
+
+  return routes;
+}
+
+function runRouting() {
+  const btn = document.getElementById('optimBtn');
+  const progWrap = document.getElementById('progWrap');
+  btn.disabled = true;
+  progWrap.classList.add('show');
+  document.getElementById('resultBox').classList.remove('show');
+
+  const maxStops = +document.getElementById('sl-max').value;
+  const veiCount = +document.getElementById('sl-vei').value;
+  costPerKm     = parseFloat(document.getElementById('sl-ckm').value);
+  avgSpeed      = +document.getElementById('sl-vel').value;
+  stopTime      = +document.getElementById('sl-tp').value;
+
+  const steps = [
+    'Agrupando pedidos por base de origem...',
+    'Priorizando entregas urgentes...',
+    'Executando Nearest Neighbor por rota...',
+    'Aplicando otimização 2-opt nas sequências...',
+    'Calculando distâncias haversine reais...',
+    'Calculando ETAs e custo por km...',
+    'Finalizando roteirização...'
+  ];
+  let pct = 0, si = 0;
+  const iv = setInterval(() => {
+    pct = Math.min(pct + Math.random()*14+5, 95);
+    document.getElementById('progFill').style.width = pct+'%';
+    document.getElementById('progLbl').textContent = '⚡ ' + steps[Math.min(si++, steps.length-1)];
+    if (pct >= 95) {
+      clearInterval(iv);
+      setTimeout(() => {
+        document.getElementById('progFill').style.width = '100%';
+        document.getElementById('progLbl').textContent = '✅ Roteirização concluída!';
+
+        // Executar algoritmo
+        const pending = orders.filter(o => o.status === 'pendente');
+        const routes = routingEngine(pending, veiCount, maxStops, costPerKm, avgSpeed, stopTime, currentObjective);
+
+        // Aplicar resultado aos pedidos e veículos
+        applyRoutes(routes);
+        routingResult = routes;
+
+        // Mostrar resultado
+        showRoutingResult(routes);
+
+        btn.disabled = false;
+        progWrap.classList.remove('show');
+        document.getElementById('resultBox').classList.add('show');
+        renderAll();
+        toast('✅ Roteirização concluída! '+routes.length+' rotas geradas com algoritmo 2-opt.', 's');
+      }, 400);
+    }
+  }, 200);
+}
+
+function applyRoutes(routes) {
+  // Reset selection when re-routing
+  selectedOrderId = null;
+  clearMapLayers();
+  var panel = document.getElementById('route-panel');
+  if (panel) panel.style.display='none';
+  var es = document.getElementById('map-empty-state');
+  if (es) es.style.display='flex';
+  // Reset orders and vehicles
+  orders.forEach(o => { o.vehicle=null; o.seq=null; o.eta=null; o.kmFromOrigin=null; o.status='pendente'; });
+  vehicles.forEach(v => { v.status='livre'; v.usedKg=0; v.stops=0; v.done=0; v.totalKm=0; v.totalCost=0; v.origin=null; v.route=[]; });
+
+  routes.forEach(r => {
+    const v = r.vehicle;
+    v.status = 'em-rota';
+    v.origin = r.origin.name;
+    v.totalKm = r.totalKm;
+    v.totalCost = Math.round(r.totalCost);
+    v.stops = r.stops.length;
+    v.route = r.stops.map(s=>s.id);
+    r.stops.forEach((s, i) => {
+      const o = orders.find(x=>x.id===s.id);
+      if (o) {
+        o.vehicle = v.id;
+        o.vehicleColor = v.color;
+        o.seq = i+1;
+        o.eta = r.etas[i];
+        o.kmFromOrigin = r.cumKms[i];
+        o.status = 'em-rota';
+        v.usedKg += o.peso;
+      }
+    });
+  });
+  updateHeaderStats();
+}
+
+function showRoutingResult(routes) {
+  var totalKm    = routes.reduce(function(s,r){return s+r.totalKm;},0);
+  var totalCost  = routes.reduce(function(s,r){return s+r.totalCost;},0);
+  var totalStops = routes.reduce(function(s,r){return s+r.stops.length;},0);
+
+  document.getElementById('resultGrid').innerHTML =
+    '<div class="rstat"><div class="rstat-val">' + routes.length + '</div><div class="rstat-lbl">Rotas geradas</div></div>'
+    + '<div class="rstat"><div class="rstat-val">' + totalStops + '</div><div class="rstat-lbl">Entregas alocadas</div></div>'
+    + '<div class="rstat"><div class="rstat-val">' + totalKm.toLocaleString('pt-BR') + '</div><div class="rstat-lbl">Km total</div></div>'
+    + '<div class="rstat"><div class="rstat-val">R$' + Math.round(totalCost).toLocaleString('pt-BR') + '</div><div class="rstat-lbl">Custo total</div></div>';
+
+  var det = '<div class="rd-title" style="margin-top:14px">Detalhe por Veículo</div>';
+  routes.forEach(function(r) {
+    var v = r.vehicle;
+    var stopsSeq = r.stops.map(function(s,i) {
+      return '<span style="color:' + v.color + '">' + (i+1) + '.</span> ' + s.dest + ' (' + r.cumKms[i] + 'km, ETA ' + r.etas[i] + ')';
+    }).join(' &rarr; ');
+    det += '<div class="rd-vehicle">'
+      + '<div class="rdv-top">'
+      +   '<div class="rdv-id" style="color:' + v.color + '">🚛 ' + v.id + ' — ' + v.driver + '</div>'
+      +   '<div class="rdv-stats">Origem: ' + r.origin.name + ' · ' + r.stops.length + ' paradas · ' + r.totalKm + ' km · R$ ' + Math.round(r.totalCost).toLocaleString('pt-BR') + '</div>'
+      + '</div>'
+      + '<div class="rdv-stops">' + stopsSeq + '</div>'
+      + '</div>';
+  });
+  document.getElementById('routeDetail').innerHTML = det;
+}
+
+
+function renderAll() {
+  renderOrders();
+  renderMap();
+  renderSeqTable();
+  renderMotTable();
+  renderLegend();
+  updateInfoPanel();
+  renderKPIs();
+}
+
+function updateHeaderStats() {
+  const entregues = orders.filter(o=>o.status==='entregue').length;
+  const emRota = orders.filter(o=>o.status==='em-rota').length;
+  const totalKm = vehicles.reduce((s,v)=>s+v.totalKm,0);
+  const totalCost = vehicles.reduce((s,v)=>s+v.totalCost,0);
+  document.getElementById('hs-ped').textContent = orders.length;
+  document.getElementById('hs-rot').textContent = vehicles.filter(v=>v.status==='em-rota').length;
+  document.getElementById('hs-ent').textContent = entregues;
+  document.getElementById('hs-km').textContent  = totalKm.toLocaleString('pt-BR')+' km';
+  document.getElementById('hs-cst').textContent = 'R$'+Math.round(totalCost).toLocaleString('pt-BR');
+}
+
+function updateInfoPanel() {
+  // Safe: only update if elements exist
+  var alocados  = orders.filter(function(o){ return o.vehicle; }).length;
+  var pendentes = orders.filter(function(o){ return o.status==='pendente'; }).length;
+  var totalKm   = vehicles.reduce(function(s,v){ return s+v.totalKm; },0);
+  var totalCost = vehicles.reduce(function(s,v){ return s+v.totalCost; },0);
+  var veisAtivos= vehicles.filter(function(v){ return v.status==='em-rota'; }).length;
+  function setEl(id, val) { var el=document.getElementById(id); if(el) el.textContent=val; }
+  setEl('ip-dist',  totalKm   ? totalKm.toLocaleString('pt-BR')+' km' : '—');
+  setEl('ip-cust',  totalCost ? 'R$ '+Math.round(totalCost).toLocaleString('pt-BR') : '—');
+  setEl('ip-vei',   veisAtivos || '—');
+  setEl('ip-alloc', alocados  || '—');
+  setEl('ip-pend',  pendentes);
+}
+
+function renderLegend() {
+  const active = vehicles.filter(v=>v.status==='em-rota');
+  document.getElementById('leg-vehicles').innerHTML = active.map(v=>
+    `<div class="leg-item"><div class="leg-dot" style="background:${v.color}"></div>${v.id} · ${v.driver.split(' ')[0]}</div>`
+  ).join('');
+}
+
+function renderOrders() {
+  const q = document.getElementById('srch').value.toLowerCase();
+  const list = document.getElementById('panel-ped');
+  const f = orders.filter(o => {
+    const ok = activeFilter==='t' || (activeFilter==='p' && o.status==='pendente') || (activeFilter==='u' && o.priority==='alto');
+    const sq = !q || o.client.toLowerCase().includes(q) || o.id.toLowerCase().includes(q) || o.dest.toLowerCase().includes(q) || o.origem.toLowerCase().includes(q);
+    return ok && sq;
+  });
+  var cards = '';
+  f.forEach(function(o) {
+    var cls    = o.priority==='alto'?'urgent':o.priority==='medio'?'warning':o.vehicle?'assigned':'';
+    var pb     = o.priority==='alto'?'badge-alto':o.priority==='medio'?'badge-medio':'badge-normal';
+    var pt     = o.priority==='alto'?'🔴 URGENTE':o.priority==='medio'?'🟡 MÉDIO':'🟢 NORMAL';
+    var vc     = o.vehicleColor||'var(--text-dim)';
+    var selCls = selectedOrderId===o.id ? ' sel-active' : '';
+    var vBadge = o.vehicle ? '<div class="mi">🚛 <b style="color:' + vc + '">' + o.vehicle + '</b></div>' : '';
+    var kmBadge= o.kmFromOrigin ? '<div class="mi">📏 <b>' + o.kmFromOrigin + 'km</b></div>' : '';
+    var etaStr = o.eta ? ' · ETA ' + o.eta : '';
+    cards += '<div class="order-card ' + cls + selCls + '" id="card-' + o.id + '" onclick="selectOrder(\'' + o.id + '\')">'
+      + '<div class="order-top"><div class="order-id">' + o.id + '</div><div class="badge ' + pb + '">' + pt + '</div></div>'
+      + '<div class="order-client">' + o.client + '</div>'
+      + '<div class="order-route">🏭 ' + o.origem + ' → 📍 ' + o.dest + '</div>'
+      + '<div class="order-meta">'
+      +   '<div class="mi">⚖️ <b>' + o.peso + 'kg</b></div>'
+      +   '<div class="mi">📦 <b>' + o.vol + 'm³</b></div>'
+      +   vBadge + kmBadge
+      + '</div>'
+      + '<div class="order-footer">🕐 ' + o.window + etaStr + '</div>'
+      + '<div style="font-size:9px;color:var(--accent);margin-top:4px;opacity:.7">🗺 Clique para ver rota no mapa</div>'
+      + '</div>';
+  });
+  list.innerHTML = cards;
+}
+
+let selectedOrderId = null;
+
+// ── Leaflet map instance ────────────────────────────────────────
+
+function initLeafletMap() {
+  // SVG map - no external dependencies needed
+  renderSVGMap();
+}
+
+function clearMapLayers() {
+  var g = document.getElementById('svg-route-layer');
+  if (g) g.innerHTML = '';
+  var g2 = document.getElementById('svg-marker-layer');
+  if (g2) g2.innerHTML = '';
+}
+
+function selectOrder(id) {
+  if (selectedOrderId === id) { clearSelection(); return; }
+  selectedOrderId = id;
+
+  renderOrders();
+  setTimeout(function(){
+    var card = document.getElementById('card-'+id);
+    if (card) card.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 50);
+
+  showTab('mapa');
+
+  setTimeout(function() {
+    var o = orders.find(function(x){ return x.id === id; });
+    if (!o) return;
+
+    var es = document.getElementById('map-empty-state');
+    if (es) es.style.display = 'none';
+
+    var siblings = orders.filter(function(x){
+      return x.client === o.client && x.origem === o.origem;
+    });
+    var ori = findOrigin(o.origem);
+    var routeStops = siblings.length <= 1 ? [o]
+      : twoOpt(nearestNeighbor(ori, siblings), ori.lat, ori.lon);
+
+    var etas = calcETAs(ori, routeStops, avgSpeed, stopTime);
+    var cumKm = 0, cur = ori;
+    var cumKms = routeStops.map(function(s){
+      cumKm += haversine(cur.lat, cur.lon, s.lat, s.lon);
+      cur = s;
+      return Math.round(cumKm);
+    });
+    var totalKm   = cumKms[cumKms.length - 1] || 0;
+    var totalCost = Math.round(totalKm * costPerKm);
+
+    drawSVGRoute(ori, routeStops, o.id);
+    showRoutePanel(o, ori, routeStops, etas, cumKms, totalKm, totalCost);
+  }, 200);
+}
+
+
+function drawSVGRoute(ori, stops, activeId) {
+  clearMapLayers();
+
+  var svg = document.getElementById('svg-map');
+  if (!svg) return;
+
+  var W = svg.viewBox.baseVal.width  || 860;
+  var H = svg.viewBox.baseVal.height || 480;
+
+  // Collect all points to auto-fit bounds
+  var allLat = [ori.lat].concat(stops.map(function(s){ return s.lat; }));
+  var allLon = [ori.lon].concat(stops.map(function(s){ return s.lon; }));
+  var minLat = Math.min.apply(null, allLat) - 1;
+  var maxLat = Math.max.apply(null, allLat) + 1;
+  var minLon = Math.min.apply(null, allLon) - 1;
+  var maxLon = Math.max.apply(null, allLon) + 1;
+
+  function px(lon){ return ((lon - minLon) / (maxLon - minLon)) * (W - 80) + 40; }
+  function py(lat){ return ((maxLat - lat) / (maxLat - minLat)) * (H - 80) + 40; }
+
+  var rl = document.getElementById('svg-route-layer');
+  var ml = document.getElementById('svg-marker-layer');
+  rl.innerHTML = '';
+  ml.innerHTML = '';
+
+  // Route line with dashes
+  var prev = ori;
+  var prevX = px(ori.lon), prevY = py(ori.lat);
+  stops.forEach(function(s, i) {
+    var sx = px(s.lon), sy = py(s.lat);
+    // Animated dashed line
+    rl.innerHTML += '<line x1="'+prevX+'" y1="'+prevY+'" x2="'+sx+'" y2="'+sy+'"'
+      +' stroke="#00e5ff" stroke-width="2" stroke-dasharray="10,6" opacity="0.8">'
+      +'<animate attributeName="stroke-dashoffset" from="0" to="-32" dur="1s" repeatCount="indefinite"/>'
+      +'</line>';
+    // Sequence number midpoint
+    var mx = (prevX+sx)/2, my = (prevY+sy)/2;
+    rl.innerHTML += '<circle cx="'+mx+'" cy="'+my+'" r="9" fill="#00e5ff" opacity="0.9"/>'
+      +'<text x="'+mx+'" y="'+(my+3)+'" text-anchor="middle" font-size="8" font-weight="900" fill="#000">'+(i+1)+'</text>';
+    prevX = sx; prevY = sy;
+    prev = s;
+  });
+
+  // Origin marker (diamond)
+  var ox = px(ori.lon), oy = py(ori.lat);
+  var s2 = 10;
+  ml.innerHTML += '<circle cx="'+ox+'" cy="'+oy+'" r="22" fill="#00e5ff" opacity="0.12"/>'
+    +'<polygon points="'+ox+','+(oy-s2)+' '+(ox+s2)+','+oy+' '+ox+','+(oy+s2)+' '+(ox-s2)+','+oy+'"'
+    +' fill="#00e5ff" stroke="#fff" stroke-width="1.5"/>'
+    +'<text x="'+ox+'" y="'+(oy+25)+'" text-anchor="middle" font-size="9" font-weight="700" fill="#00e5ff">'+ori.name+'</text>'
+    +'<text x="'+ox+'" y="'+(oy+35)+'" text-anchor="middle" font-size="7" fill="#00e5ff" opacity="0.7">ORIGEM</text>';
+
+  // Destination markers
+  stops.forEach(function(s, i) {
+    var sx = px(s.lon), sy = py(s.lat);
+    var isActive = s.id === activeId;
+    var col = isActive ? '#f7c948' : '#00e5ff';
+    var r = isActive ? 13 : 10;
+    var city = s.dest ? s.dest.split(',')[0] : '';
+    ml.innerHTML += '<circle cx="'+sx+'" cy="'+sy+'" r="'+(r+4)+'" fill="'+col+'" opacity="0.15"/>'
+      +'<circle cx="'+sx+'" cy="'+sy+'" r="'+r+'" fill="'+col+'" stroke="#0b1018" stroke-width="1.8"/>'
+      +'<text x="'+sx+'" y="'+(sy+4)+'" text-anchor="middle" font-size="8" font-weight="900" fill="#000">'+(i+1)+'</text>'
+      +'<text x="'+sx+'" y="'+(sy+r+12)+'" text-anchor="middle" font-size="8" font-weight="700" fill="'+col+'">'+city+'</text>'
+      +(isActive ? '<text x="'+sx+'" y="'+(sy+r+22)+'" text-anchor="middle" font-size="7" fill="'+col+'">&#9664; SELECIONADO</text>' : '');
+  });
+}
+
+
+function clearSelection() {
+  selectedOrderId = null;
+  clearMapLayers();
+  var panel = document.getElementById('route-panel');
+  if (panel) panel.style.display = 'none';
+  var es = document.getElementById('map-empty-state');
+  if (es) es.style.display = 'flex';
+  renderOrders();
+  renderSVGMap();
+}
+
+// ── Route panel (left overlay) ──────────────────────────────────
+function showRoutePanel(o, ori, stops, etas, cumKms, totalKm, totalCost) {
+  var panel = document.getElementById('route-panel');
+  var totalTime = stops.length ? etas[etas.length-1] : '—';
+  var color = o.vehicleColor || '#00e5ff';
+  var allocV = o.vehicle ? vehicles.find(function(v){return v.id===o.vehicle;}) : null;
+  var vtIcon = allocV ? (VEHICLE_TYPES.find(function(x){return x.tipo===allocV.tipo;})||VEHICLE_TYPES[0]).icon : '🚛';
+  var vehicleBadge = o.vehicle
+    ? '· <span style="color:'+color+'">'+vtIcon+' '+o.vehicle+' ('+(allocV?allocV.tipo:'')+')</span>'
+    : '· <span style="color:var(--accent4)">⚠️ Sem veículo</span>';
+
+  var stopsHtml = '';
+  for (var i = 0; i < stops.length; i++) {
+    var s = stops[i];
+    var isActive = s.id === o.id;
+    var sc = isActive ? '#f7c948' : '#00e5ff';
+    var aStyle = isActive ? 'background:rgba(247,201,72,.08);border-radius:6px;padding:4px 6px;margin:0 -6px;' : '';
+    var aLabel = isActive ? ' ◀' : '';
+    var fSize  = isActive ? 'font-size:13px;' : '';
+    if (i===0) {
+      stopsHtml += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px">'
+        + '<div style="width:20px;height:20px;border-radius:50%;background:#00e5ff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:1px">🏭</div>'
+        + '<div><div style="font-size:12px;font-weight:700;color:#00e5ff">'+ori.name+'</div>'
+        + '<div style="font-size:10px;color:var(--text-dim)">'+ori.type+' · '+ori.state+' · ORIGEM</div></div></div>'
+        + '<div style="width:1px;height:12px;background:var(--border);margin-left:10px;margin-bottom:4px"></div>';
+    } else {
+      stopsHtml += '<div style="width:1px;height:12px;background:var(--border);margin-left:10px;margin-bottom:4px"></div>';
+    }
+    stopsHtml += '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;'+aStyle+'">'
+      + '<div style="width:20px;height:20px;border-radius:50%;background:'+sc+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#000;flex-shrink:0;margin-top:1px">'+(i+1)+'</div>'
+      + '<div><div style="'+fSize+'font-weight:700;color:'+sc+'">'+s.dest+aLabel+'</div>'
+      + '<div style="font-size:10px;color:var(--text-dim)">'+s.client+' · '+cumKms[i]+'km · ETA '+etas[i]+'</div></div></div>';
+  }
+
+  document.getElementById('rp-content').innerHTML =
+    '<div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:8px">🗺 Rota · '+stops.length+' parada'+(stops.length!==1?'s':'')+'</div>'
+    + '<div style="font-size:10px;color:var(--text-dim);margin-bottom:10px">'+o.client+' · '+ori.name+' '+vehicleBadge+'</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap">'
+    +   '<div style="flex:1;min-width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center">'
+    +     '<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent)">'+totalKm+'</div>'
+    +     '<div style="font-size:9px;color:var(--text-dim)">km</div></div>'
+    +   '<div style="flex:1;min-width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center">'
+    +     '<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent3)">R$'+totalCost.toLocaleString('pt-BR')+'</div>'
+    +     '<div style="font-size:9px;color:var(--text-dim)">custo</div></div>'
+    +   '<div style="flex:1;min-width:50px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;text-align:center">'
+    +     '<div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--accent4)">'+totalTime+'</div>'
+    +     '<div style="font-size:9px;color:var(--text-dim)">ETA fim</div></div>'
+    + '</div>'
+    + '<div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:8px">'
+    +   '<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);margin-bottom:8px">Sequência otimizada</div>'
+    +   stopsHtml
+    + '</div>'
+    + '<div style="font-size:9px;color:var(--text-dim);text-align:center;margin-bottom:8px">Nearest Neighbor + 2-opt · Haversine</div>'
+    + '<button onclick="clearSelection()" class="btn btn-ghost" style="width:100%;font-size:11px">✕ Fechar rota</button>';
+
+  panel.style.display = 'block';
+}
+
+// ── renderMap: init Leaflet and redraw selected route ────────────
+function renderMap() {
+  renderSVGMap();
+}
+
+function renderSVGMap() {
+  var rl = document.getElementById('svg-route-layer');
+  var ml = document.getElementById('svg-marker-layer');
+  var ol = document.getElementById('svg-origin-layer');
+  if (rl) rl.innerHTML = '';
+  if (ml) ml.innerHTML = '';
+  if (ol) ol.innerHTML = '';
+
+  if (ol) {
+    ORIGINS.forEach(function(ori) {
+      var x = ori.x, y = ori.y, s = 7;
+      var label = ori.name + ' - ' + ori.type + ' - ' + ori.state;
+      ol.innerHTML += '<g style="cursor:pointer" onclick="toast(\'' + label + '\', \'i\')">'
+        + '<circle cx="' + x + '" cy="' + y + '" r="18" fill="#00e5ff" opacity="0.1"/>'
+        + '<polygon points="' + x + ',' + (y-s) + ' ' + (x+s) + ',' + y + ' ' + x + ',' + (y+s) + ' ' + (x-s) + ',' + y + '"'
+        + ' fill="#00e5ff" stroke="#0b1018" stroke-width="1.2" opacity="0.95"/>'
+        + '<text x="' + x + '" y="' + (y+19) + '" text-anchor="middle" fill="#00e5ff" font-size="7" font-weight="700">' + ori.name + '</text>'
+        + '</g>';
+    });
+  }
+
+  if (ml) {
+    orders.forEach(function(o) {
+      var v = o.vehicle ? vehicles.find(function(v2){ return v2.id === o.vehicle; }) : null;
+      var col = v ? v.color : '#445566';
+      var icon = o.status === 'entregue' ? String.fromCharCode(10003) : o.vehicle ? String.fromCharCode(8594) : '·';
+      var op = o.status === 'entregue' ? 0.4 : 0.85;
+      ml.innerHTML += '<circle cx="' + o.x + '" cy="' + o.y + '" r="7" fill="' + col + '" opacity="' + op + '" stroke="#0b1018" stroke-width="1"/>'
+        + '<text x="' + o.x + '" y="' + (o.y+3) + '" text-anchor="middle" font-size="6" font-weight="900" fill="#000">' + icon + '</text>';
+    });
+  }
+
+  // Update legend
+  var leg = document.getElementById('leg-vehicles');
+  if (leg) {
+    var active = vehicles.filter(function(v){ return v.status === 'em-rota'; });
+    leg.innerHTML = active.map(function(v){
+      return '<div class="leg-item"><div class="leg-dot" style="background:' + v.color + '"></div>' + v.id + ' · ' + v.driver.split(' ')[0] + '</div>';
+    }).join('');
+  }
+}
+
+
+function renderVehicles() {
+  document.getElementById('panel-vei').innerHTML = vehicles.map(v => {
+    const pct    = v.capKg ? Math.min(100, Math.round(v.usedKg / v.capKg * 100)) : 0;
+    const fillCls= pct<50?'cf-ok':pct<85?'cf-mid':'cf-full';
+    const stCls  = v.status==='livre'?'st-livre':'st-rota';
+    const vt     = VEHICLE_TYPES.find(x=>x.tipo===v.tipo) || VEHICLE_TYPES[0];
+    const capRange = (vt.minKg/1000).toFixed(0) + '–' + (vt.maxKg/1000).toFixed(0) + ' t';
+    const cargaUsada = v.usedKg ? (v.usedKg/1000).toFixed(1) + ' t' : '0 t';
+    return '<div class="vehicle-card" style="border-left:3px solid ' + v.color + '">'
+      + '<div class="vc-top">'
+      +   '<div class="vc-id">' + vt.icon + ' ' + v.id + '</div>'
+      +   '<div style="display:flex;gap:5px;align-items:center">'
+      +     '<div style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(0,0,0,.3);color:' + v.color + '">' + v.tipo + '</div>'
+      +     '<div class="vc-status ' + stCls + '">' + v.status + '</div>'
+      +   '</div>'
+      + '</div>'
+      + '<div style="font-size:9px;color:var(--text-dim);margin-bottom:6px">Capacidade: ' + capRange + ' · Carga atual: ' + cargaUsada + '</div>'
+      + '<div class="vc-stats">'
+      +   '<div class="vst"><div class="vst-val">' + v.stops + '</div><div class="vst-lbl">Paradas</div></div>'
+      +   '<div class="vst"><div class="vst-val" style="color:' + v.color + '">' + v.totalKm + '</div><div class="vst-lbl">Km</div></div>'
+      +   '<div class="vst"><div class="vst-val" style="color:var(--accent4)">' + (v.totalCost?'R$'+v.totalCost.toLocaleString('pt-BR'):'—') + '</div><div class="vst-lbl">Custo</div></div>'
+      +   '<div class="vst"><div class="vst-val">' + pct + '%</div><div class="vst-lbl">Ocup.</div></div>'
+      + '</div>'
+      + '<div class="cap-bar"><div class="cap-fill ' + fillCls + '" style="width:' + pct + '%"></div></div>'
+      + '<div class="vc-driver"><span>' + v.driver + '</span><span style="font-size:10px">' + (v.origin?'📍 '+v.origin:'🏠 Base') + '</span></div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderOrigins() {
+  document.getElementById('panel-ori').innerHTML = ORIGINS.map(ori => {
+    const ords = orders.filter(o=>o.origem===ori.name||o.origem===ori.name);
+    const alocados = ords.filter(o=>o.vehicle).length;
+    return `<div class="vehicle-card" style="border-left:3px solid var(--accent)">
+      <div class="vc-top">
+        <div class="vc-id" style="color:var(--accent)">◆ ${ori.name}</div>
+        <div class="vc-status st-rota">${ori.type}</div>
+      </div>
+      <div class="vc-stats">
+        <div class="vst"><div class="vst-val">${ords.length}</div><div class="vst-lbl">Pedidos</div></div>
+        <div class="vst"><div class="vst-val" style="color:var(--accent3)">${alocados}</div><div class="vst-lbl">Alocados</div></div>
+        <div class="vst"><div class="vst-val" style="color:var(--accent4)">${ords.length-alocados}</div><div class="vst-lbl">Pendentes</div></div>
+      </div>
+      <div class="vc-driver"><span>${ori.state}</span><span style="font-size:10px">📍 ${ori.lat.toFixed(2)}, ${ori.lon.toFixed(2)}</span></div>
+    </div>`;
+  }).join('');
+}
+
+
+function renderRouteTable() {
+  const asgn = orders.filter(o=>o.vehicle).sort((a,b)=>{
+    if(a.vehicle<b.vehicle)return -1; if(a.vehicle>b.vehicle)return 1;
+    return (a.seq||99)-(b.seq||99);
+  });
+  document.getElementById('routeBody').innerHTML = asgn.map(o => {
+    const v = vehicles.find(x=>x.id===o.vehicle)||{};
+    const sc = o.status==='entregue'?'pill-entregue':o.status==='em-rota'?'pill-em-rota':'pill-pendente';
+    return `<tr>
+      <td><div class="seq-bubble" style="background:${v.color||'#888'}">${o.seq||'—'}</div></td>
+      <td style="font-family:var(--mono);font-size:10px;color:${v.color||'var(--accent)'}">${o.id}</td>
+      <td style="font-weight:600">${o.client}</td>
+      <td style="color:var(--accent);font-size:10px">${o.origem}</td>
+      <td style="color:var(--text-dim);font-size:10px">${o.dest}</td>
+      <td style="color:${v.color||'#888'};font-weight:700">${o.vehicle}</td>
+      <td style="font-family:var(--mono);color:var(--accent4)">${o.kmFromOrigin||'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent3)">${o.kmFromOrigin?'R$'+Math.round(o.kmFromOrigin*costPerKm).toLocaleString('pt-BR'):'—'}</td>
+      <td style="color:var(--accent4);font-size:10px">${o.window}</td>
+      <td style="font-family:var(--mono);color:var(--accent)">${o.eta||'—'}</td>
+      <td><span class="pill ${sc}">${o.status.replace('-',' ')}</span></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderSeqTable() {
+  const active = orders.filter(o=>['em-rota','pendente'].includes(o.status)).slice(0,12);
+  document.getElementById('seqBody').innerHTML = active.map(o => {
+    const v = vehicles.find(x=>x.id===o.vehicle)||{};
+    const sc = o.status==='em-rota'?'pill-em-rota':'pill-pendente';
+    return `<tr>
+      <td>${o.seq||'—'}</td>
+      <td style="font-family:var(--mono);font-size:10px;color:${v.color||'var(--accent)'}">${o.id}</td>
+      <td style="font-weight:600">${o.client}</td>
+      <td style="font-size:10px;color:var(--accent)">${o.origem} → ${o.dest}</td>
+      <td style="color:${v.color||'#888'};font-weight:700">${o.vehicle||'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent4)">${o.kmFromOrigin?o.kmFromOrigin+'km':'—'}</td>
+      <td style="font-family:var(--mono);color:var(--accent)">${o.eta||'—'}</td>
+      <td><span class="pill ${sc}">${o.status.replace('-',' ')}</span></td>
+      <td><button class="btn btn-ghost" style="font-size:9px;padding:3px 7px" onclick="markDelivered('${o.id}')">✓ OK</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMotTable() {
+  document.getElementById('motBody').innerHTML = vehicles.map(v => {
+    const sc = v.status==='livre'?'pill-entregue':'pill-em-rota';
+    const stops20 = Math.min(v.stops, MAX_STOPS);
+    const pct = Math.round(stops20/MAX_STOPS*100);
+    const vt2 = VEHICLE_TYPES.find(function(x){return x.tipo===v.tipo;})||VEHICLE_TYPES[0];
+    const capR = (vt2.minKg/1000).toFixed(0)+'–'+(vt2.maxKg/1000).toFixed(0)+' t';
+    const cargaT = v.usedKg?(v.usedKg/1000).toFixed(1)+' t':'—';
+    return '<tr>'
+      + '<td style="font-weight:600">' + v.driver + '</td>'
+      + '<td style="font-family:var(--mono);color:' + v.color + '">' + v.id + '</td>'
+      + '<td><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:8px;background:rgba(0,0,0,.3);color:' + v.color + '">' + vt2.icon + ' ' + v.tipo + '</span></td>'
+      + '<td style="font-size:10px;color:var(--text-dim)">' + capR + ' · ' + cargaT + '</td>'
+      + '<td style="color:var(--accent);font-size:10px">' + (v.origin||'—') + '</td>'
+      + '<td>' + v.stops + '/' + MAX_STOPS + '</td>'
+      + '<td style="font-family:var(--mono);color:var(--accent4)">' + (v.totalKm?v.totalKm.toLocaleString('pt-BR')+' km':'—') + '</td>'
+      + '<td style="font-family:var(--mono);color:var(--accent3)">' + (v.totalCost?'R$'+v.totalCost.toLocaleString('pt-BR'):'—') + '</td>'
+      + '<td>'
+      +   '<div style="background:var(--border);border-radius:3px;overflow:hidden;width:80px;height:5px">'
+      +     '<div style="background:' + v.color + ';width:' + pct + '%;height:100%"></div>'
+      +   '</div>'
+      +   '<div style="font-size:9px;color:var(--text-dim);margin-top:2px">' + pct + '% cap.</div>'
+      + '</td>'
+      + '<td><span class="pill ' + sc + '">' + v.status + '</span></td>'
+      + '</tr>';
+  }).join('');
+}
+
+function renderKPIs() {
+  const alocados = orders.filter(o=>o.vehicle).length;
+  const totalKm  = vehicles.reduce((s,v)=>s+v.totalKm,0);
+  const totalCst = vehicles.reduce((s,v)=>s+v.totalCost,0);
+  const veisAtiv = vehicles.filter(v=>v.status==='em-rota').length;
+  const avgKm    = veisAtiv ? Math.round(totalKm/veisAtiv) : 0;
+  const avgStops = veisAtiv ? (alocados/veisAtiv).toFixed(1) : 0;
+  const avgCostPerStop = alocados ? Math.round(totalCst/alocados) : 0;
+
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi-card"><div class="kpi-lbl">Total Km Roteirizado</div><div class="kpi-val" style="color:var(--accent4)">${totalKm.toLocaleString('pt-BR')}</div><div class="kpi-trend">Distância real (Haversine)</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Custo Total Estimado</div><div class="kpi-val" style="color:var(--accent3)">R$ ${Math.round(totalCst).toLocaleString('pt-BR')}</div><div class="kpi-trend">@ R$ ${costPerKm.toFixed(2).replace('.',',')} /km</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Veículos Utilizados</div><div class="kpi-val" style="color:var(--accent)">${veisAtiv}</div><div class="kpi-trend">de ${vehicles.length} disponíveis</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Entregas Alocadas</div><div class="kpi-val" style="color:var(--accent3)">${alocados}</div><div class="kpi-trend">de ${orders.length} pedidos</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Km Médio / Veículo</div><div class="kpi-val" style="color:var(--accent4)">${avgKm.toLocaleString('pt-BR')}</div><div class="kpi-trend">Média da frota</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Paradas Médias / Veículo</div><div class="kpi-val" style="color:var(--accent)">${avgStops}</div><div class="kpi-trend">Máx: ${MAX_STOPS} por veículo</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Custo Médio / Entrega</div><div class="kpi-val" style="color:var(--accent3)">R$ ${avgCostPerStop.toLocaleString('pt-BR')}</div><div class="kpi-trend">Por parada realizada</div></div>
+    <div class="kpi-card"><div class="kpi-lbl">Pendentes sem rota</div><div class="kpi-val" style="color:${orders.filter(o=>!o.vehicle).length?'var(--danger)':'var(--accent3)'}">${orders.filter(o=>!o.vehicle).length}</div><div class="kpi-trend">${orders.filter(o=>!o.vehicle).length?'⚠️ Adicionar veículos':'✅ Todos alocados'}</div></div>
+  `;
+
+  // Distribuição por origem
+  document.getElementById('origemStats').innerHTML = ORIGINS.map(ori => {
+    const ords = orders.filter(o=>o.origem===ori.name);
+    const alloc = ords.filter(o=>o.vehicle).length;
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;min-width:110px">
+      <div style="font-size:10px;font-weight:700;color:var(--accent);margin-bottom:4px">${ori.name}</div>
+      <div style="font-size:11px;color:var(--text-dim)">${ori.state} · ${ori.type}</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;margin-top:4px">${alloc}<span style="font-size:11px;color:var(--text-dim)">/${ords.length}</span></div>
+      <div style="font-size:9px;color:var(--text-dim)">alocados</div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════
+// UI HANDLERS
+// ════════════════════════════════════════════════════════════════════
+
+function setFilter(f) {
+  activeFilter=f;
+  ['t','p','u'].forEach(x=>document.getElementById('fc-'+x).classList.remove('active'));
+  document.getElementById('fc-'+f).classList.add('active');
+  renderOrders();
+}
+
+function sideTab(tab) {
+  ['ped','vei','ori'].forEach(t=>{
+    document.getElementById('stab-'+t).classList.remove('active');
+    document.getElementById('panel-'+t).classList.add('hidden');
+  });
+  document.getElementById('stab-'+tab).classList.add('active');
+  document.getElementById('panel-'+tab).classList.remove('hidden');
+  if(tab==='vei') renderVehicles();
+  if(tab==='ori') renderOrigins();
+}
+
+function showTab(tab) {
+  ['mapa','rotas','otimizacao','kpis'].forEach(function(t) {
+    var el = document.getElementById('view-'+t);
+    if (el) { el.style.display = 'none'; el.style.flex = ''; }
+    var tb = document.getElementById('mtab-'+t);
+    if (tb) tb.classList.remove('active');
+  });
+  var active = document.getElementById('view-'+tab);
+  if (active) {
+    if (tab === 'mapa') {
+      active.style.display = 'flex';
+      active.style.flex = '1';
+      active.style.flexDirection = 'column';
+      active.style.position = 'relative';
+      active.style.overflow = 'hidden';
+      active.style.minHeight = '0';
+    } else {
+      active.style.display = 'block';
+      active.style.flex = '1';
+    }
+  }
+  var activeTab = document.getElementById('mtab-'+tab);
+  if (activeTab) activeTab.classList.add('active');
+  var bp = document.getElementById('bottomPanel');
+  if (bp) bp.style.display = ['otimizacao','kpis'].includes(tab) ? 'none' : '';
+  if (tab === 'mapa') {
+    updateInfoPanel();
+    renderSVGMap();
+  }
+  if (tab === 'rotas') renderRouteTable();
+  if (tab === 'kpis')  renderKPIs();
+}
+
+function botTab(tab) {
+  ['seq','mot'].forEach(t=>{
+    document.getElementById('btab-'+t).classList.remove('active');
+    document.getElementById('bot-'+t).classList.add('hidden');
+  });
+  document.getElementById('btab-'+tab).classList.add('active');
+  document.getElementById('bot-'+tab).classList.remove('hidden');
+}
+
+function selObj(opt) {
+  currentObjective=opt;
+  ['dist','custo','tempo'].forEach(o=>document.getElementById('obj-'+o).classList.remove('sel'));
+  document.getElementById('obj-'+opt).classList.add('sel');
+}
+
+function updateVehicleCount(n) {
+  while(vehicles.length < n) {
+    const i = vehicles.length;
+    const vt = VEHICLE_TYPES[i % VEHICLE_TYPES.length];
+    vehicles.push({
+      id: vt.tipo.toUpperCase().substring(0,3) + '-' + String(i+1).padStart(2,'0'),
+      driver: DRIVERS[i] || ('Motorista ' + (i+1)),
+      color: vt.color, tipo: vt.tipo,
+      capKg: vt.maxKg, minKg: vt.minKg,
+      status:'livre', usedKg:0,
+      stops:0, done:0, totalKm:0, totalCost:0, origin:null, route:[]
+    });
+  }
+  vehicles = vehicles.slice(0, n);
+}
+
+function markDelivered(id) {
+  const o = orders.find(x=>x.id===id);
+  if(!o) return;
+  o.status='entregue';
+  const v = vehicles.find(x=>x.id===o.vehicle);
+  if(v) v.done++;
+  updateHeaderStats();
+  toast('✅ '+o.id+' entregue! '+o.dest,'s');
+  renderSeqTable(); renderMap(); renderOrders();
+}
+
+// ─── BANCO DE CIDADES BRASILEIRAS ────────────────────────────────────
+const CITY_DB = [
+  {n:'São Paulo, SP',lat:-23.550,lon:-46.633},{n:'Rio de Janeiro, RJ',lat:-22.906,lon:-43.172},
+  {n:'Belo Horizonte, MG',lat:-19.916,lon:-43.934},{n:'Brasília, DF',lat:-15.779,lon:-47.930},
+  {n:'Salvador, BA',lat:-12.971,lon:-38.501},{n:'Fortaleza, CE',lat:-3.717,lon:-38.543},
+  {n:'Manaus, AM',lat:-3.119,lon:-60.021},{n:'Curitiba, PR',lat:-25.428,lon:-49.273},
+  {n:'Recife, PE',lat:-8.054,lon:-34.877},{n:'Porto Alegre, RS',lat:-30.033,lon:-51.230},
+  {n:'Belém, PA',lat:-1.455,lon:-48.502},{n:'Goiânia, GO',lat:-16.686,lon:-49.253},
+  {n:'Guarulhos, SP',lat:-23.462,lon:-46.533},{n:'Campinas, SP',lat:-22.905,lon:-47.063},
+  {n:'São Luís, MA',lat:-2.530,lon:-44.303},{n:'Maceió, AL',lat:-9.665,lon:-35.735},
+  {n:'Natal, RN',lat:-5.793,lon:-35.203},{n:'Teresina, PI',lat:-5.092,lon:-42.803},
+  {n:'Campo Grande, MS',lat:-20.469,lon:-54.620},{n:'João Pessoa, PB',lat:-7.115,lon:-34.863},
+  {n:'Aracaju, SE',lat:-10.909,lon:-37.073},{n:'Cuiabá, MT',lat:-15.601,lon:-56.097},
+  {n:'Porto Velho, RO',lat:-8.760,lon:-63.900},{n:'Macapá, AP',lat:0.034,lon:-51.066},
+  {n:'Rio Branco, AC',lat:-9.974,lon:-67.810},{n:'Palmas, TO',lat:-10.240,lon:-48.353},
+  {n:'Boa Vista, RR',lat:2.820,lon:-60.673},{n:'Florianópolis, SC',lat:-27.595,lon:-48.549},
+  {n:'Vitória, ES',lat:-20.319,lon:-40.338},
+  // SP interior
+  {n:'Ribeirão Preto, SP',lat:-21.177,lon:-47.813},{n:'Sorocaba, SP',lat:-23.501,lon:-47.458},
+  {n:'Santos, SP',lat:-23.960,lon:-46.333},{n:'São José dos Campos, SP',lat:-23.178,lon:-45.885},
+  {n:'Osasco, SP',lat:-23.532,lon:-46.791},{n:'Bauru, SP',lat:-22.315,lon:-49.068},
+  {n:'Jundiaí, SP',lat:-23.185,lon:-46.884},{n:'Piracicaba, SP',lat:-22.728,lon:-47.649},
+  {n:'Limeira, SP',lat:-22.564,lon:-47.401},{n:'Araçatuba, SP',lat:-21.209,lon:-50.431},
+  {n:'Marília, SP',lat:-22.213,lon:-49.946},{n:'São José do Rio Preto, SP',lat:-20.816,lon:-49.379},
+  {n:'Presidente Prudente, SP',lat:-22.120,lon:-51.388},{n:'Franca, SP',lat:-20.538,lon:-47.400},
+  {n:'Indaiatuba, SP',lat:-23.090,lon:-47.219},{n:'Araraquara, SP',lat:-21.794,lon:-48.175},
+  {n:'Americana, SP',lat:-22.739,lon:-47.333},{n:'Suzano, SP',lat:-23.542,lon:-46.311},
+  {n:'Mogi das Cruzes, SP',lat:-23.523,lon:-46.186},{n:'Santo André, SP',lat:-23.664,lon:-46.530},
+  {n:'São Bernardo do Campo, SP',lat:-23.694,lon:-46.565},{n:'Diadema, SP',lat:-23.686,lon:-46.620},
+  {n:'Carapicuíba, SP',lat:-23.522,lon:-46.836},{n:'Descalvado, SP',lat:-21.900,lon:-47.616},
+  {n:'Cosmópolis, SP',lat:-22.645,lon:-47.196},{n:'Hortolândia, SP',lat:-22.858,lon:-47.221},
+  {n:'Sumaré, SP',lat:-22.820,lon:-47.267},{n:'São Carlos, SP',lat:-21.998,lon:-47.889},
+  // PR
+  {n:'Londrina, PR',lat:-23.310,lon:-51.165},{n:'Maringá, PR',lat:-23.420,lon:-51.937},
+  {n:'Ponta Grossa, PR',lat:-25.094,lon:-50.162},{n:'Cascavel, PR',lat:-24.956,lon:-53.455},
+  {n:'Foz do Iguaçu, PR',lat:-25.547,lon:-54.588},{n:'Apucarana, PR',lat:-23.551,lon:-51.461},
+  {n:'Paranaguá, PR',lat:-25.519,lon:-48.509},{n:'Umuarama, PR',lat:-23.766,lon:-53.326},
+  {n:'Guarapuava, PR',lat:-25.390,lon:-51.461},{n:'Toledo, PR',lat:-24.724,lon:-53.742},
+  // RS
+  {n:'Caxias do Sul, RS',lat:-29.168,lon:-51.179},{n:'Pelotas, RS',lat:-31.769,lon:-52.337},
+  {n:'Canoas, RS',lat:-29.919,lon:-51.183},{n:'Santa Maria, RS',lat:-29.686,lon:-53.807},
+  {n:'Novo Hamburgo, RS',lat:-29.678,lon:-51.131},{n:'São Leopoldo, RS',lat:-29.760,lon:-51.148},
+  {n:'Gravataí, RS',lat:-29.944,lon:-50.991},{n:'Viamão, RS',lat:-30.081,lon:-51.023},
+  {n:'Passo Fundo, RS',lat:-28.262,lon:-52.406},{n:'Rio Grande, RS',lat:-32.035,lon:-52.098},
+  // SC
+  {n:'Joinville, SC',lat:-26.304,lon:-48.846},{n:'Blumenau, SC',lat:-26.919,lon:-49.066},
+  {n:'Chapecó, SC',lat:-27.101,lon:-52.615},{n:'Criciúma, SC',lat:-28.677,lon:-49.369},
+  {n:'Itajaí, SC',lat:-26.908,lon:-48.661},{n:'Lages, SC',lat:-27.816,lon:-50.326},
+  // MG
+  {n:'Uberlândia, MG',lat:-18.918,lon:-48.277},{n:'Contagem, MG',lat:-19.932,lon:-44.053},
+  {n:'Juiz de Fora, MG',lat:-21.762,lon:-43.350},{n:'Montes Claros, MG',lat:-16.727,lon:-43.861},
+  {n:'Uberaba, MG',lat:-19.748,lon:-47.931},{n:'Governador Valadares, MG',lat:-18.854,lon:-41.944},
+  {n:'Betim, MG',lat:-19.968,lon:-44.198},{n:'Ribeirão das Neves, MG',lat:-19.762,lon:-44.086},
+  {n:'Divinópolis, MG',lat:-20.138,lon:-44.882},{n:'Ipatinga, MG',lat:-19.468,lon:-42.537},
+  // GO / DF
+  {n:'Anápolis, GO',lat:-16.328,lon:-48.953},{n:'Aparecida de Goiânia, GO',lat:-16.823,lon:-49.244},
+  {n:'Inhumas, GO',lat:-16.358,lon:-49.497},{n:'Caldas Novas, GO',lat:-17.743,lon:-48.624},
+  // MT / MS
+  {n:'Rondonópolis, MT',lat:-16.467,lon:-54.636},{n:'Várzea Grande, MT',lat:-15.646,lon:-56.132},
+  {n:'Primavera do Leste, MT',lat:-15.559,lon:-54.285},{n:'Sinop, MT',lat:-11.863,lon:-55.506},
+  {n:'Dourados, MS',lat:-22.221,lon:-54.807},{n:'Três Lagoas, MS',lat:-20.751,lon:-51.678},
+  {n:'Corumbá, MS',lat:-19.009,lon:-57.651},
+  // BA
+  {n:'Feira de Santana, BA',lat:-12.266,lon:-38.966},{n:'Vitória da Conquista, BA',lat:-14.866,lon:-40.838},
+  {n:'Ilhéus, BA',lat:-14.789,lon:-39.049},{n:'Juazeiro, BA',lat:-9.422,lon:-40.503},
+  {n:'Camaçari, BA',lat:-12.699,lon:-38.323},{n:'Lauro de Freitas, BA',lat:-12.897,lon:-38.330},
+  // PE / NE
+  {n:'Caruaru, PE',lat:-8.284,lon:-35.976},{n:'São Lourenço da Mata, PE',lat:-8.002,lon:-35.004},
+  {n:'Olinda, PE',lat:-7.999,lon:-34.855},{n:'Petrolina, PE',lat:-9.397,lon:-40.501},
+  {n:'Campina Grande, PB',lat:-7.230,lon:-35.881},{n:'Mossoró, RN',lat:-5.188,lon:-37.344},
+  {n:'Juazeiro do Norte, CE',lat:-7.211,lon:-39.315},{n:'Sobral, CE',lat:-3.688,lon:-40.349},
+  {n:'Caucaia, CE',lat:-3.737,lon:-38.653},{n:'Maracanaú, CE',lat:-3.874,lon:-38.626},
+  {n:'Imperatriz, MA',lat:-5.519,lon:-47.474},{n:'Timon, MA',lat:-5.095,lon:-42.836},
+  {n:'Parnaíba, PI',lat:-2.906,lon:-41.776},
+  // ES
+  {n:'Vila Velha, ES',lat:-20.329,lon:-40.292},{n:'Serra, ES',lat:-20.128,lon:-40.307},
+  {n:'Cariacica, ES',lat:-20.263,lon:-40.417},
+  // RJ
+  {n:'São Gonçalo, RJ',lat:-22.827,lon:-43.054},{n:'Duque de Caxias, RJ',lat:-22.785,lon:-43.311},
+  {n:'Nova Iguaçu, RJ',lat:-22.759,lon:-43.451},{n:'Niterói, RJ',lat:-22.903,lon:-43.103},
+  {n:'Petrópolis, RJ',lat:-22.505,lon:-43.178},{n:'Campos dos Goytacazes, RJ',lat:-21.755,lon:-41.330},
+  {n:'Volta Redonda, RJ',lat:-22.523,lon:-44.103},
+  // Norte
+  {n:'Santarém, PA',lat:-2.444,lon:-54.708},{n:'Marabá, PA',lat:-5.365,lon:-49.117},
+  {n:'Ananindeua, PA',lat:-1.366,lon:-48.372},{n:'Porto Velho, RO',lat:-8.760,lon:-63.900},
+  {n:'Ji-Paraná, RO',lat:-10.879,lon:-61.944},{n:'Araguaína, TO',lat:-7.192,lon:-48.204},
+];
+
+// ─── MULTI-CLIENT + MULTI-CITY LOGIC ─────────────────────────────
+let selectedCities  = [];
+let selectedClients = [];
+let geoDebounce = null;
+
+const MAX_CITIES  = 20;
+const MAX_CLIENTS = 20;
+
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+function updateComboLabel() {
+  var nc = selectedClients.length, nct = selectedCities.length, combo = nc * nct;
+  var lc = document.getElementById('lbl-combo');
+  var lcl= document.getElementById('lbl-ncli');
+  var lci= document.getElementById('lbl-ncit');
+  if(lc)  lc.textContent  = combo;
+  if(lcl) lcl.textContent = nc + ' cliente(s)';
+  if(lci) lci.textContent = nct + ' cidade(s)';
+  var btn = document.getElementById('btn-add-order');
+  if(btn) btn.textContent = combo > 0
+    ? 'Adicionar ' + combo + ' pedido' + (combo > 1 ? 's' : '')
+    : 'Adicionar Pedidos';
+}
+
+function updateCliChipsUI() {
+  var wrap = document.getElementById('cli-chips');
+  var lbl  = document.getElementById('cli-count-lbl');
+  if(!wrap) return;
+  lbl.textContent = '(' + selectedClients.length + '/20)';
+  lbl.style.color = selectedClients.length >= MAX_CLIENTS ? 'var(--danger)' : 'var(--accent4)';
+  if (!selectedClients.length) {
+    wrap.innerHTML = '<span style="font-size:11px;color:var(--text-dim);align-self:center">Nenhum cliente adicionado ainda...</span>';
+    updateComboLabel(); return;
+  }
+  var priColors = {normal:'var(--accent3)', medio:'var(--accent4)', alto:'var(--danger)'};
+  var priLabels = {normal:'Normal', medio:'Médio', alto:'URGENTE'};
+  wrap.innerHTML = selectedClients.map(function(cl, i) {
+    var pc = priColors[cl.priority] || 'var(--accent4)';
+    return '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(247,201,72,.1);'
+      + 'border:1px solid var(--accent4);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--accent4)">'
+      + '<span>' + (i+1) + '.</span><span>' + cl.name + '</span>'
+      + '<span style="font-size:9px;padding:1px 5px;border-radius:8px;background:rgba(0,0,0,.3);color:' + pc + '">' + priLabels[cl.priority] + '</span>'
+      + '<span onclick="removeClient(' + i + ')" style="cursor:pointer;color:var(--text-dim);font-size:13px;line-height:1;margin-left:2px"'
+      + ' onmouseover="this.style.color=\'var(--danger)\'" onmouseout="this.style.color=\'var(--text-dim)\'">×</span>'
+      + '</div>';
+  }).join('');
+  updateComboLabel();
+}
+
+function addClient() {
+  var inp  = document.getElementById('f-cli');
+  var pri  = document.getElementById('f-pri') ? document.getElementById('f-pri').value : 'normal';
+  var name = inp ? inp.value.trim() : '';
+  if (!name) { toast('Digite o nome do cliente antes de adicionar.','e'); return; }
+  if (selectedClients.length >= MAX_CLIENTS) { toast('Limite de 20 clientes atingido.','e'); return; }
+  if (selectedClients.some(function(cl){ return norm(cl.name)===norm(name); })) { toast(name + ' já foi adicionado.','e'); return; }
+  selectedClients.push({ name:name, priority:pri });
+  if(inp) inp.value='';
+  if(inp) inp.focus();
+  var st = document.getElementById('cli-status');
+  if(st) st.innerHTML = '<span style="color:var(--accent3)">✅ ' + name + ' adicionado! (' + selectedClients.length + '/20)</span>';
+  updateCliChipsUI();
+  setTimeout(function(){ var s=document.getElementById('cli-status'); if(s) s.innerHTML=''; },2000);
+}
+
+function removeClient(idx) {
+  selectedClients.splice(idx,1);
+  updateCliChipsUI();
+}
+
+function cliKeydown(e) {
+  if (e.key==='Enter') { e.preventDefault(); addClient(); }
+}
+
+function updateChipsUI() {
+  var wrap = document.getElementById('city-chips');
+  var lbl  = document.getElementById('city-count-lbl');
+  if(!wrap) return;
+  lbl.textContent = '(' + selectedCities.length + '/20)';
+  lbl.style.color = selectedCities.length >= MAX_CITIES ? 'var(--danger)' : 'var(--accent)';
+  if (!selectedCities.length) {
+    wrap.innerHTML = '<span style="font-size:11px;color:var(--text-dim);align-self:center">Nenhuma cidade adicionada ainda...</span>';
+    updateComboLabel(); return;
+  }
+  wrap.innerHTML = selectedCities.map(function(ct, i) {
+    return '<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(0,229,255,.12);'
+      + 'border:1px solid var(--accent);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--accent)">'
+      + '<span>' + (i+1) + '.</span><span>' + ct.name + '</span>'
+      + '<span onclick="removeCity(' + i + ')" style="cursor:pointer;color:var(--text-dim);font-size:13px;line-height:1;margin-left:2px"'
+      + ' onmouseover="this.style.color=\'var(--danger)\'" onmouseout="this.style.color=\'var(--text-dim)\'">×</span>'
+      + '</div>';
+  }).join('');
+  updateComboLabel();
+}
+
+function removeCity(idx) {
+  selectedCities.splice(idx,1);
+  updateChipsUI();
+}
+
+function clearAll() {
+  selectedCities=[]; selectedClients=[];
+  updateChipsUI(); updateCliChipsUI();
+  var fi=document.getElementById('f-dest'); if(fi) fi.value='';
+  var fci=document.getElementById('f-cli'); if(fci) fci.value='';
+}
+
+function resetGeo() {
+  selectedCities=[]; selectedClients=[];
+  var st=document.getElementById('geo-status');
+  var sg=document.getElementById('geo-suggestions');
+  var fi=document.getElementById('f-dest');
+  var fci=document.getElementById('f-cli');
+  if(st)  st.innerHTML='';
+  if(sg)  { sg.style.display='none'; sg.innerHTML=''; }
+  if(fi)  fi.value='';
+  if(fci) fci.value='';
+  updateChipsUI(); updateCliChipsUI();
+}
+
+function geocodeCity(val) {
+  clearTimeout(geoDebounce);
+  var st=document.getElementById('geo-status');
+  var sg=document.getElementById('geo-suggestions');
+  if (!val||val.length<2) { st.innerHTML=''; sg.style.display='none'; return; }
+  geoDebounce = setTimeout(function() {
+    if (selectedCities.length>=MAX_CITIES) {
+      st.innerHTML='<span style="color:var(--danger)">⚠️ Limite de 20 cidades atingido.</span>';
+      sg.style.display='none'; return;
+    }
+    var q=norm(val);
+    var matches=CITY_DB.filter(function(ct){ return norm(ct.n).includes(q); }).slice(0,10);
+    if (!matches.length) {
+      st.innerHTML='<span style="color:var(--danger)">⚠️ Cidade não encontrada. Tente outro nome.</span>';
+      sg.style.display='none'; return;
+    }
+    sg.innerHTML=matches.map(function(ct) {
+      var already=selectedCities.some(function(s){ return s.name===ct.n; });
+      var onclick=already?'': "addCity('"+ct.n.replace(/'/g,"\\'")+"',"+ct.lat+","+ct.lon+")";
+      return '<div onclick="'+onclick+'"'
+        +' style="padding:9px 14px;cursor:'+(already?'default':'pointer')+';font-size:12px;'
+        +'border-bottom:1px solid var(--border);transition:background .15s;'
+        +'display:flex;justify-content:space-between;align-items:center;opacity:'+(already?0.4:1)+'"'
+        +' onmouseover="this.style.background=\''+(already?'':'rgba(0,229,255,.08)')+'\'"'
+        +' onmouseout="this.style.background=\'\'"> '
+        +'<span>'+ct.n+'</span>'
+        +(already
+          ?'<span style="font-size:10px;color:var(--accent3)">✓ adicionada</span>'
+          :'<span style="font-size:10px;color:var(--text-dim)">+ adicionar</span>')
+        +'</div>';
+    }).join('');
+    sg.style.display='block';
+    st.innerHTML='<span style="color:var(--text-dim)">'+matches.length+' resultado(s) — clique para adicionar</span>';
+  },200);
+}
+
+function addCity(name,lat,lon) {
+  if (selectedCities.length>=MAX_CITIES) { toast('Limite de 20 cidades atingido.','e'); return; }
+  if (selectedCities.some(function(c){ return c.name===name; })) { toast(name+' já foi adicionada.','e'); return; }
+  selectedCities.push({name:name,lat:lat,lon:lon});
+  updateChipsUI();
+  var fi=document.getElementById('f-dest'); if(fi) fi.value='';
+  var st=document.getElementById('geo-status');
+  if(st) st.innerHTML='<span style="color:var(--accent3)">✅ '+name+' adicionada! ('+selectedCities.length+'/20)</span>';
+  var sg=document.getElementById('geo-suggestions'); if(sg) sg.style.display='none';
+  setTimeout(function(){ var s=document.getElementById('geo-status'); if(s) s.innerHTML=''; },2000);
+}
+
+function destKeydown(e) {
+  if (e.key==='Enter') { var f=document.querySelector('#geo-suggestions div'); if(f) f.click(); }
+}
+
+function showModal(){
+  document.getElementById('addModal').classList.remove('hidden');
+  resetGeo();
+  document.getElementById('btn-add-order').textContent='Adicionar Pedidos';
+}
+function closeModal(){ document.getElementById('addModal').classList.add('hidden'); resetGeo(); }
+
+function addOrder() {
+  if (!selectedClients.length) { toast('Adicione pelo menos um cliente / destinatário.','e'); return; }
+  if (!selectedCities.length)  { toast('Adicione pelo menos uma cidade de entrega.','e'); return; }
+
+  var origem  = document.getElementById('f-ori').value;
+  var peso    = +document.getElementById('f-peso').value;
+  var vol     = +document.getElementById('f-vol').value;
+  var window_ = document.getElementById('f-ji').value+'-'+document.getElementById('f-jf').value;
+
+  var created=[];
+  selectedClients.forEach(function(cl) {
+    selectedCities.forEach(function(city) {
+      var id='PED-'+String(orders.length+1).padStart(3,'0');
+      orders.push({
+        id:id, client:cl.name, dest:city.name, origem:origem,
+        lat:city.lat, lon:city.lon,
+        x:lx(city.lon), y:ly(city.lat),
+        peso:peso, vol:vol, priority:cl.priority, window:window_,
+        status:'pendente', vehicle:null, vehicleColor:null,
+        seq:null, eta:null, kmFromOrigin:null
+      });
+      created.push(id);
+    });
+  });
+
+  document.getElementById('hs-ped').textContent=orders.length;
+  closeModal();
+  renderOrders(); renderMap();
+  toast('✅ '+created.length+' pedido(s) criados ('+selectedClients.length+' clientes × '+selectedCities.length+' cidades). Roteirize para alocar.','s');
+}
+
+
+// ══════════════════════════════════════════════════════════════════════
+// IMPORTAÇÃO DE PLANILHA ROUTEASY
+// ══════════════════════════════════════════════════════════════════════
+
+// Mapa filial → origem do ADMov
+const FILIAL_MAP = {
+  'fábrica descalvado':   'Fáb. Descalvado',
+  'fabrica descalvado':   'Fáb. Descalvado',
+  'fabrica inhumas':      'Inhumas',
+  'fábrica inhumas':      'Inhumas',
+  'fabrica apucarana':    'Apucarana',
+  'fábrica apucarana':    'Apucarana',
+  'fabrica apucarana nova':'Apucarana',
+  'fábrica apucarana nova':'Apucarana',
+  'fabrica rolim de m:oura':'Canoas',
+  'fabrica rolim de moura':'Canoas',
+  'fabrica primavera do leste':'Primavera do Leste',
+  'fábrica primavera do leste':'Primavera do Leste',
+  'fabrica são loureço':  'S. Lourenço da Mata',
+  'fabrica sao loureco':  'S. Lourenço da Mata',
+  'fabrica canoas':       'Canoas',
+  'fábrica canoas':       'Canoas',
+};
+
+// Coordenadas de municípios brasileiros (subset dos mais frequentes na planilha)
+const MUNI_COORDS = {
+  'RIFAINA (SP)':                  {lat:-20.069,lon:-47.422},
+  'ESPIGAO D OESTE (RO)':          {lat:-11.530,lon:-60.844},
+  'MIRANTE DA SERRA (RO)':         {lat:-11.498,lon:-62.659},
+  'ALTO PARAISO (RO)':             {lat:-9.882, lon:-62.764},
+  'SAO FRANCISCO DO GUAPORE (RO)': {lat:-12.042,lon:-63.557},
+  'LIMOEIRO DO NORTE (CE)':        {lat:-5.145, lon:-38.098},
+  'JUINA (MT)':                    {lat:-11.374,lon:-58.739},
+  'BOA VISTA (RR)':                {lat:2.820,  lon:-60.673},
+  'ROLIM DE MOURA (RO)':           {lat:-11.730,lon:-61.779},
+  'MORADA NOVA DE MINAS (MG)':     {lat:-18.617,lon:-45.362},
+  'CACOAL (RO)':                   {lat:-11.438,lon:-61.447},
+  'JARU (RO)':                     {lat:-10.439,lon:-62.464},
+  'PORTO ALEGRE (RS)':             {lat:-30.033,lon:-51.230},
+  'ARIQUEMES (RO)':                {lat:-9.912, lon:-63.037},
+  'SANHARO (PE)':                  {lat:-8.361, lon:-36.564},
+  'JATOBA (PE)':                   {lat:-9.164, lon:-38.270},
+  'FORTIM (CE)':                   {lat:-4.449, lon:-37.797},
+  'ARACATI (CE)':                  {lat:-4.559, lon:-37.770},
+  'URUPA (RO)':                    {lat:-11.734,lon:-60.895},
+  'ALTA FLORESTA (MT)':            {lat:-9.875, lon:-56.086},
+  'MACHADINHO D OESTE (RO)':       {lat:-9.389, lon:-62.001},
+  'UBERLANDIA (MG)':               {lat:-18.918,lon:-48.277},
+  'CACAULANDIA (RO)':              {lat:-10.346,lon:-62.900},
+  'ACARAU (CE)':                   {lat:-3.456, lon:-40.120},
+  'JAGUARIPE (BA)':                {lat:-13.112,lon:-38.897},
+  'SAO CARLOS (SP)':               {lat:-21.998,lon:-47.889},
+  'SAO PAULO (SP)':                {lat:-23.550,lon:-46.633},
+  'CAMOCIM (CE)':                  {lat:-2.902, lon:-40.841},
+  'VIAMAO (RS)':                   {lat:-30.081,lon:-51.023},
+  'SAO JOSE DOS CAMPOS (SP)':      {lat:-23.178,lon:-45.885},
+  'TOLEDO (PR)':                   {lat:-24.724,lon:-53.742},
+  'SAO BENTO DO UNA (PE)':         {lat:-8.520, lon:-36.444},
+  'GRAVATAI (RS)':                 {lat:-29.944,lon:-50.991},
+  'RIO CRESPO (RO)':               {lat:-9.650, lon:-62.998},
+  'SAO CRISTOVAO (SE)':            {lat:-11.012,lon:-37.206},
+  'BAURU (SP)':                    {lat:-22.315,lon:-49.068},
+  'JI-PARANA (RO)':                {lat:-10.879,lon:-61.944},
+  'BREJO GRANDE (SE)':             {lat:-10.423,lon:-36.468},
+  'CAXIAS DO SUL (RS)':            {lat:-29.168,lon:-51.179},
+  'DESCALVADO (SP)':               {lat:-21.900,lon:-47.616},
+  'PORTO VELHO (RO)':              {lat:-8.760, lon:-63.900},
+  'TANGARA DA SERRA (MT)':         {lat:-14.621,lon:-57.493},
+  'CEARA-MIRIM (RN)':              {lat:-5.634, lon:-35.426},
+  'COSTA MARQUES (RO)':            {lat:-12.444,lon:-64.244},
+  'SAO PEDRO DO SUL (RS)':         {lat:-29.622,lon:-54.177},
+  'CAMPO NOVO DE RONDONIA (RO)':   {lat:-10.570,lon:-63.688},
+  'AVARE (SP)':                    {lat:-23.099,lon:-48.924},
+  'FEIRA DE SANTANA (BA)':         {lat:-12.266,lon:-38.966},
+  'IACRI (SP)':                    {lat:-21.685,lon:-50.697},
+  'CAMPO FLORIDO (MG)':            {lat:-19.760,lon:-48.576},
+  'MEDIANEIRA (PR)':               {lat:-25.295,lon:-54.095},
+  'IGARAPE-ACU (PA)':              {lat:-1.126, lon:-47.619},
+  'NOVA CANAA DO NORTE (MT)':      {lat:-10.596,lon:-55.758},
+  'JUNDIAI (SP)':                  {lat:-23.185,lon:-46.884},
+  'PARIPIRANGA (BA)':              {lat:-10.681,lon:-37.861},
+  'SAO LUDGERO (SC)':              {lat:-28.317,lon:-49.212},
+  'PIMENTA BUENO (RO)':            {lat:-11.672,lon:-61.195},
+  'JUINA (MT)':                    {lat:-11.374,lon:-58.739},
+  'IGARAPE GRANDE (MA)':           {lat:-4.671, lon:-44.843},
+  'CAMPO GRANDE (MS)':             {lat:-20.469,lon:-54.620},
+  'PAULINIA (SP)':                 {lat:-22.762,lon:-47.153},
+  'BASTOS (SP)':                   {lat:-21.923,lon:-50.737},
+  'ILHA SOLTEIRA (SP)':            {lat:-20.432,lon:-51.344},
+  'MARILIA (SP)':                  {lat:-22.213,lon:-49.946},
+  'MAGE (RJ)':                     {lat:-22.657,lon:-43.038},
+  'CLAUDIA (MT)':                  {lat:-11.488,lon:-54.880},
+  'MODELO (SC)':                   {lat:-26.793,lon:-52.843},
+  'NOVA PONTE (MG)':               {lat:-19.147,lon:-47.686},
+  'IGARATA (SP)':                  {lat:-23.203,lon:-46.166},
+  'ABAETETUBA (PA)':               {lat:-1.724, lon:-48.879},
+  'SAO BENTO DO UNA (PE)':         {lat:-8.520, lon:-36.444},
+  'MONTE ALEGRE DE MINAS (MG)':    {lat:-18.869,lon:-48.888},
+  'ROLIM DE MOURA (RO)':           {lat:-11.730,lon:-61.779},
+  'MACHADINHO D OESTE (RO)':       {lat:-9.389, lon:-62.001},
+  'MIRANTE DA SERRA (RO)':         {lat:-11.498,lon:-62.659},
+  'JARU (RO)':                     {lat:-10.439,lon:-62.464},
+  'RIO CRESPO (RO)':               {lat:-9.650, lon:-62.998},
+  'CACAULANDIA (RO)':              {lat:-10.346,lon:-62.900},
+  'ESPIGAO D OESTE (RO)':          {lat:-11.530,lon:-60.844},
+  'PIMENTA BUENO (RO)':            {lat:-11.672,lon:-61.195},
+  'ARIQUEMES (RO)':                {lat:-9.912, lon:-63.037},
+  'CACOAL (RO)':                   {lat:-11.438,lon:-61.447},
+  'JI-PARANA (RO)':                {lat:-10.879,lon:-61.944},
+  'LIMOEIRO DO NORTE (CE)':        {lat:-5.145, lon:-38.098},
+  'CAMOCIM (CE)':                  {lat:-2.902, lon:-40.841},
+  'FORTIM (CE)':                   {lat:-4.449, lon:-37.797},
+  'ARACATI (CE)':                  {lat:-4.559, lon:-37.770},
+  'ACARAU (CE)':                   {lat:-3.456, lon:-40.120},
+  'SANHARO (PE)':                  {lat:-8.361, lon:-36.564},
+  'JATOBA (PE)':                   {lat:-9.164, lon:-38.270},
+};
+
+// Fallback coords by state (centroid)
+const STATE_FALLBACK = {
+  RO:{lat:-10.8,lon:-62.8}, SP:{lat:-22.9,lon:-47.5}, RS:{lat:-29.7,lon:-51.2},
+  MT:{lat:-12.6,lon:-55.9}, CE:{lat:-5.1, lon:-39.3}, PE:{lat:-8.3, lon:-36.9},
+  MG:{lat:-18.9,lon:-44.7}, RN:{lat:-5.8, lon:-36.5}, PR:{lat:-24.0,lon:-51.5},
+  SE:{lat:-10.6,lon:-37.4}, GO:{lat:-15.8,lon:-49.4}, BA:{lat:-12.9,lon:-41.7},
+  MS:{lat:-20.5,lon:-54.6}, RR:{lat:2.8,  lon:-60.7}, PB:{lat:-7.1, lon:-36.9},
+  AL:{lat:-9.6, lon:-36.8}, PA:{lat:-3.8, lon:-52.0}, SC:{lat:-27.2,lon:-50.2},
+  AC:{lat:-9.0, lon:-70.8}, PI:{lat:-7.7, lon:-42.7}, ES:{lat:-19.6,lon:-40.7},
+  RJ:{lat:-22.4,lon:-43.2}, AM:{lat:-3.8, lon:-65.1}, DF:{lat:-15.8,lon:-47.9},
+  TO:{lat:-10.3,lon:-48.4}, MA:{lat:-5.5, lon:-44.3}
+};
+
+function getMuniCoords(municipio, estado) {
+  var key = municipio ? municipio.trim().toUpperCase() : '';
+  if (MUNI_COORDS[key]) return MUNI_COORDS[key];
+  // Try without state suffix
+  var bare = key.replace(/\s*\([A-Z]{2}\)$/, '').trim();
+  for (var k in MUNI_COORDS) {
+    if (k.replace(/\s*\([A-Z]{2}\)$/, '').trim() === bare) return MUNI_COORDS[k];
+  }
+  // Try CITY_DB
+  var normMuni = bare.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  var found = CITY_DB.find(function(c){ return norm(c.n).replace(/,.*$/,'').trim() === normMuni; });
+  if (found) return {lat: found.lat, lon: found.lon};
+  // State fallback
+  return STATE_FALLBACK[estado] || {lat:-15.8, lon:-47.9};
+}
+
+var importedRawData = [];  // all rows parsed from xlsx
+var filteredImportData = []; // after filters
+var selectedImportRows = new Set();
+
+function handleXlsxImport(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  // Reset input so same file can be re-imported
+  event.target.value = '';
+
+  // Use SheetJS (already available in ADMov context via CDN — we'll load it dynamically)
+  if (typeof XLSX !== 'undefined') {
+    parseXlsxFile(file);
+  } else {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = function() { parseXlsxFile(file); };
+    script.onerror = function() { toast('Erro ao carregar leitor de planilhas. Verifique conexão.','e'); };
+    document.head.appendChild(script);
+  }
+}
+
+function parseXlsxFile(file) {
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb   = XLSX.read(e.target.result, {type:'binary', cellDates:true});
+      var ws   = wb.Sheets[wb.SheetNames[0]];
+      var data = XLSX.utils.sheet_to_json(ws, {defval:''});
+
+      if (!data.length) { toast('Planilha vazia ou formato inválido.','e'); return; }
+
+      // Map columns (flexible header matching)
+      var sample = data[0];
+      var keys = Object.keys(sample);
+      function findKey(patterns) {
+        for (var i=0;i<patterns.length;i++) {
+          var p = patterns[i].toLowerCase();
+          var k = keys.find(function(k){ return k.toLowerCase().includes(p); });
+          if (k) return k;
+        }
+        return null;
+      }
+
+      var kFilial   = findKey(['filial']);
+      var kCliente  = findKey(['nome do cliente','nome cliente','cliente']);
+      var kMunicipio= findKey(['município','municipio','muni']);
+      var kEstado   = findKey(['estado']);
+      var kBairro   = findKey(['bairro']);
+      var kPeso     = findKey(['peso']);
+      var kNF       = findKey(['número nf','numero nf','nf']);
+      var kPedido   = findKey(['número pedido','numero pedido','pedido']);
+      var kData     = findKey(['data']);
+      var kVol      = findKey(['volume']);
+      var kValor    = findKey(['valor']);
+      var kCarga    = findKey(['carga 5','carga5','carga']);
+
+      importedRawData = data.map(function(row, idx) {
+        var filialRaw = (row[kFilial]||'').toString().trim();
+        var filialKey = filialRaw.toLowerCase().replace(/\s+/g,' ');
+        var origem    = FILIAL_MAP[filialKey] || filialRaw;
+        var municipio = (row[kMunicipio]||'').toString().trim();
+        var estado    = (row[kEstado]||'').toString().trim().toUpperCase().substring(0,2);
+        var coords    = getMuniCoords(municipio, estado);
+        var pesoRaw   = parseFloat(row[kPeso])||0;
+        var dataVal   = row[kData];
+        var dataStr   = '';
+        if (dataVal instanceof Date) {
+          dataStr = dataVal.toLocaleDateString('pt-BR');
+        } else if (dataVal) {
+          dataStr = dataVal.toString().substring(0,10);
+        }
+        return {
+          _idx:   idx,
+          nf:     row[kNF]  ? row[kNF].toString()  : '—',
+          pedido: row[kPedido] ? row[kPedido].toString() : '—',
+          client: (row[kCliente]||'SEM NOME').toString().trim(),
+          municipio: municipio,
+          estado: estado,
+          bairro: (row[kBairro]||'').toString().trim(),
+          dest:   municipio + (estado ? ', '+estado : ''),
+          origem: origem,
+          filialRaw: filialRaw,
+          peso:   pesoRaw,
+          vol:    parseFloat(row[kVol])||0,
+          valor:  parseFloat(row[kValor])||0,
+          data:   dataStr,
+          lat:    coords.lat,
+          lon:    coords.lon,
+          selected: true,
+        };
+      }).filter(function(r){ return r.peso > 0; });
+
+      filteredImportData = importedRawData.slice();
+      selectedImportRows = new Set(filteredImportData.map(function(r){ return r._idx; }));
+      openImportModal();
+    } catch(err) {
+      console.error(err);
+      toast('Erro ao ler planilha: ' + err.message,'e');
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+function openImportModal() {
+  document.getElementById('importModal').classList.remove('hidden');
+  document.getElementById('import-dropzone').style.display = 'none';
+  document.getElementById('import-summary').style.display  = 'block';
+  document.getElementById('btn-confirm-import').style.display = '';
+
+  // Populate filter selects
+  var dates   = [...new Set(importedRawData.map(function(r){ return r.data; }))].sort();
+  var filials = [...new Set(importedRawData.map(function(r){ return r.filialRaw; }))].sort();
+  var estados = [...new Set(importedRawData.map(function(r){ return r.estado; }))].sort();
+
+  function buildOpts(sel, arr, allLabel) {
+    sel.innerHTML = '<option value="">'+allLabel+'</option>' +
+      arr.map(function(v){ return '<option value="'+v+'">'+v+'</option>'; }).join('');
+  }
+  buildOpts(document.getElementById('imp-filter-date'),   dates,   'Todas as datas');
+  buildOpts(document.getElementById('imp-filter-filial'), filials, 'Todas as filiais');
+  buildOpts(document.getElementById('imp-filter-estado'), estados, 'Todos os estados');
+
+  renderImportStats();
+  renderImportPreview();
+}
+
+function applyImportFilters() {
+  var date   = document.getElementById('imp-filter-date').value;
+  var filial = document.getElementById('imp-filter-filial').value;
+  var estado = document.getElementById('imp-filter-estado').value;
+  filteredImportData = importedRawData.filter(function(r) {
+    return (!date   || r.data === date)
+        && (!filial || r.filialRaw === filial)
+        && (!estado || r.estado === estado);
+  });
+  selectedImportRows = new Set(filteredImportData.map(function(r){ return r._idx; }));
+  renderImportStats();
+  renderImportPreview();
+}
+
+function resetImportFilters() {
+  ['imp-filter-date','imp-filter-filial','imp-filter-estado'].forEach(function(id){
+    document.getElementById(id).value='';
+  });
+  filteredImportData = importedRawData.slice();
+  selectedImportRows = new Set(filteredImportData.map(function(r){ return r._idx; }));
+  renderImportStats();
+  renderImportPreview();
+}
+
+function renderImportStats() {
+  var rows   = filteredImportData;
+  var total  = rows.length;
+  var pesoT  = rows.reduce(function(s,r){ return s+r.peso; },0);
+  var filialN= new Set(rows.map(function(r){ return r.filialRaw; })).size;
+  var municN = new Set(rows.map(function(r){ return r.dest; })).size;
+  document.getElementById('import-stats').innerHTML =
+    mkStat(total, 'Pedidos', 'var(--accent)')
+    + mkStat((pesoT/1000).toFixed(1)+' t', 'Peso Total', 'var(--accent4)')
+    + mkStat(filialN, 'Filiais', 'var(--accent3)')
+    + mkStat(municN, 'Municípios', 'var(--accent)');
+}
+
+function mkStat(val, lbl, color) {
+  return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-family:var(--mono);font-size:20px;font-weight:800;color:'+color+'">'+val+'</div>'
+    + '<div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">'+lbl+'</div>'
+    + '</div>';
+}
+
+function renderImportPreview() {
+  var tbody = document.getElementById('import-preview-body');
+  var rows  = filteredImportData.slice(0, 300); // max preview 300
+  tbody.innerHTML = rows.map(function(r) {
+    var checked = selectedImportRows.has(r._idx);
+    var vtInfo  = getVehicleTypeForPeso(r.peso);
+    return '<tr class="'+(checked?'imp-row-sel':'')+'">'
+      + '<td><input type="checkbox" '+(checked?'checked':'')+' onchange="toggleImportRow('+r._idx+',this.checked)"></td>'
+      + '<td style="font-family:var(--mono);font-size:10px;color:var(--accent)">'+r.nf+'</td>'
+      + '<td style="font-size:11px;font-weight:600;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.client+'">'+r.client+'</td>'
+      + '<td style="font-size:11px">'+r.municipio+'<br><span style="color:var(--text-dim);font-size:9px">'+r.bairro+'</span></td>'
+      + '<td style="font-size:11px;color:var(--text-dim)">'+r.estado+'</td>'
+      + '<td style="font-family:var(--mono);font-size:11px;color:var(--accent4)">'+(r.peso/1000).toFixed(2)+'t</td>'
+      + '<td style="font-size:10px"><span style="color:'+vtInfo.color+'">'+vtInfo.icon+' '+vtInfo.tipo+'</span><br><span style="color:var(--text-dim)">'+r.filialRaw+'</span></td>'
+      + '<td style="font-size:10px;color:var(--text-dim)">'+r.data+'</td>'
+      + '</tr>';
+  }).join('');
+  if (filteredImportData.length > 300) {
+    tbody.innerHTML += '<tr><td colspan="8" style="text-align:center;color:var(--text-dim);padding:8px;font-size:11px">... e mais '+(filteredImportData.length-300)+' pedidos (todos serão importados se selecionados)</td></tr>';
+  }
+  updateImportSelectionInfo();
+}
+
+function getVehicleTypeForPeso(pesoKg) {
+  for (var i=0; i<VEHICLE_TYPES.length; i++) {
+    if (pesoKg <= VEHICLE_TYPES[i].maxKg) return VEHICLE_TYPES[i];
+  }
+  return VEHICLE_TYPES[0];
+}
+
+function toggleImportRow(idx, checked) {
+  if (checked) selectedImportRows.add(idx);
+  else         selectedImportRows.delete(idx);
+  updateImportSelectionInfo();
+}
+
+function toggleAllImport(checked) {
+  filteredImportData.forEach(function(r) {
+    if (checked) selectedImportRows.add(r._idx);
+    else         selectedImportRows.delete(r._idx);
+  });
+  renderImportPreview();
+}
+
+function updateImportSelectionInfo() {
+  var sel  = filteredImportData.filter(function(r){ return selectedImportRows.has(r._idx); });
+  var pesoT= sel.reduce(function(s,r){ return s+r.peso; },0);
+  var info = document.getElementById('import-selection-info');
+  if(info) info.innerHTML = '<b style="color:var(--accent)">'+sel.length+'</b> pedidos selecionados · '
+    + '<b style="color:var(--accent4)">'+(pesoT/1000).toFixed(1)+'t</b> de carga total · '
+    + 'Clique nas linhas para selecionar/deselecionar';
+}
+
+function confirmImport() {
+  var toImport = importedRawData.filter(function(r){ return selectedImportRows.has(r._idx); });
+  if (!toImport.length) { toast('Selecione ao menos um pedido.','e'); return; }
+
+  var added = 0;
+  toImport.forEach(function(r) {
+    var id = 'PED-'+String(orders.length+1).padStart(3,'0');
+    // Priority based on weight (>28t = urgent, >14t = medio)
+    var priority = r.peso >= 28000 ? 'alto' : r.peso >= 14000 ? 'medio' : 'normal';
+    orders.push({
+      id:id, client:r.client, dest:r.dest, origem:r.origem,
+      lat:r.lat, lon:r.lon,
+      x:lx(r.lon), y:ly(r.lat),
+      peso:r.peso, vol:r.vol, priority:priority,
+      window:'08:00-18:00',
+      nf: r.nf, pedido: r.pedido, data: r.data,
+      bairro: r.bairro,
+      status:'pendente', vehicle:null, vehicleColor:null,
+      seq:null, eta:null, kmFromOrigin:null
+    });
+    added++;
+  });
+
+  document.getElementById('hs-ped').textContent = orders.length;
+  closeImportModal();
+  renderOrders(); renderMap(); updateHeaderStats();
+
+  // Auto-suggest routing
+  toast('✅ '+added+' pedidos importados! Acesse ⚡ Roteirizar para calcular as rotas.','s');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.add('hidden');
+  document.getElementById('import-dropzone').style.display = '';
+  document.getElementById('import-summary').style.display  = 'none';
+  document.getElementById('btn-confirm-import').style.display = 'none';
+  importedRawData = []; filteredImportData = []; selectedImportRows = new Set();
+}
+
+function toast(msg, type) {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className='toast '+(type||'i');
+  t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(()=>{ t.style.opacity='0'; setTimeout(()=>t.remove(),300); },4000);
+}
+
+// Live ETA drift
+setInterval(()=>{
+  const active = orders.filter(o=>o.status==='em-rota'&&o.eta);
+  if(active.length){
+    const o = active[Math.floor(Math.random()*active.length)];
+    let [h,m]=o.eta.split(':').map(Number);
+    m=Math.max(0,Math.min(59,m+Math.floor(Math.random()*3)-1));
+    o.eta=h+':'+String(m).padStart(2,'0');
+    renderSeqTable();
+  }
+},8000);
+
+// ─── VEHICLE TYPE SELECTOR (Roteirização tab) ────────────────────
+function initVTypeSelector() {
+  var el = document.getElementById('vtype-selector');
+  if (!el) return;
+  el.innerHTML = VEHICLE_TYPES.map(function(vt) {
+    var hasVehicle = vehicles.some(function(v){ return v.tipo === vt.tipo; });
+    return '<div id="vtsel-' + vt.tipo + '" onclick="toggleVType(\'' + vt.tipo + '\')" '
+      + 'style="border:2px solid ' + (hasVehicle ? vt.color : 'var(--border)') + ';'
+      + 'border-radius:8px;padding:8px 4px;text-align:center;cursor:pointer;'
+      + 'background:' + (hasVehicle ? 'rgba(0,0,0,.25)' : 'transparent') + ';'
+      + 'transition:all .2s;opacity:' + (hasVehicle ? '1' : '0.4') + '">'
+      + '<div style="font-size:18px;margin-bottom:3px">' + vt.icon + '</div>'
+      + '<div style="font-size:10px;font-weight:800;color:' + vt.color + '">' + vt.tipo + '</div>'
+      + '<div style="font-size:8px;color:var(--text-dim);line-height:1.3">' + (vt.minKg/1000).toFixed(0) + '–' + (vt.maxKg/1000).toFixed(0) + ' t</div>'
+      + '</div>';
+  }).join('');
+}
+
+var activeVTypes = new Set(VEHICLE_TYPES.map(function(vt){ return vt.tipo; }));
+
+function toggleVType(tipo) {
+  if (activeVTypes.has(tipo)) {
+    if (activeVTypes.size <= 1) { toast('Mantenha pelo menos um tipo ativo.','e'); return; }
+    activeVTypes.delete(tipo);
+    // Remove vehicles of this type
+    vehicles = vehicles.filter(function(v){ return v.tipo !== tipo; });
+  } else {
+    activeVTypes.add(tipo);
+    // Add one vehicle of this type
+    var vt = VEHICLE_TYPES.find(function(x){ return x.tipo === tipo; });
+    var i = vehicles.length;
+    vehicles.push({
+      id: vt.tipo.toUpperCase().substring(0,3) + '-' + String(i+1).padStart(2,'0'),
+      driver: DRIVERS[i % DRIVERS.length] || ('Motorista ' + (i+1)),
+      color: vt.color, tipo: vt.tipo,
+      capKg: vt.maxKg, minKg: vt.minKg,
+      status:'livre', usedKg:0,
+      stops:0, done:0, totalKm:0, totalCost:0, origin:null, route:[]
+    });
+  }
+  document.getElementById('pv-vei').textContent = vehicles.length;
+  document.getElementById('sl-vei').value = vehicles.length;
+  initVTypeSelector();
+  toast((activeVTypes.has(tipo) ? '✅ ' : '❌ ') + tipo + (activeVTypes.has(tipo) ? ' adicionado à frota.' : ' removido da frota.'), 'i');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────
+updateHeaderStats();
+renderOrders();
+renderSeqTable();
+renderMotTable();
+renderKPIs();
+initVTypeSelector();
+// Init SVG map
+renderSVGMap();
+
+
+</script>
+</body>
+</html>
